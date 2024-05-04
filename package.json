@@ -1,0 +1,57 @@
+{
+  "name": "job-space",
+  "version": "0.0.0",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "build": "turbo run build",
+    "dev": "turbo run dev --parallel",
+    "debug": "turbo run debug --parallel",
+    "start": "turbo run start --parallel",
+    "lint": "turbo run lint",
+    "format": "prettier --write \"**/*.{ts,tsx,md}\"",
+    "prepare": "husky install",
+    "flush": "rimraf node_modules apps/*/node_modules packages/*/node_modules apps/api/dist apps/web/.next",
+    "storybook": "storybook dev -p 6006",
+    "storybook:build": "storybook build"
+  },
+  "devDependencies": {
+    "@sandumo/prisma-generator-json-types-dto": "^0.0.1",
+    "@storybook/addon-essentials": "^7.5.3",
+    "@storybook/addon-interactions": "^7.5.3",
+    "@storybook/addon-links": "^7.5.3",
+    "@storybook/addon-onboarding": "^1.0.8",
+    "@storybook/blocks": "^7.5.3",
+    "@storybook/nextjs": "^7.5.3",
+    "@storybook/react": "^7.5.3",
+    "@storybook/testing-library": "^0.2.2",
+    "@vegardit/prisma-generator-nestjs-dto": "^1.5.1",
+    "eslint-config-custom": "workspace:*",
+    "eslint-plugin-storybook": "^0.6.15",
+    "husky": "^8.0.0",
+    "lint-staged": "^13.0.3",
+    "prettier": "latest",
+    "prisma": "^5.12.1",
+    "prisma-json-types-generator": "^3.0.4",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "rimraf": "^3.0.2",
+    "storybook": "^7.5.3",
+    "turbo": "latest",
+    "typescript": "4.8.4"
+  },
+  "engines": {
+    "node": ">=14.0.0"
+  },
+  "prisma": {
+    "schema": "apps/api/prisma/schema.prisma"
+  },
+  "pnpm": {
+    "overrides": {
+      "@types/react": "18.2.78"
+    }
+  }
+}

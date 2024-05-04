@@ -1,0 +1,29 @@
+{
+  "name": "@sandumo/prisma-generator-json-types-dto",
+  "version": "0.0.1",
+  "main": "./dist/generator.js",
+  "types": "./dist/generator.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "lint": "eslint ./src/**/*.{ts,tsx}"
+  },
+  "devDependencies": {
+    "eslint": "^7.32.0",
+    "eslint-config-custom": "workspace:*",
+    "prisma": "^5.13.0",
+    "tsconfig": "workspace:*",
+    "typescript": "^4.5.2"
+  },
+  "dependencies": {
+    "@prisma/client": "^5.13.0",
+    "@prisma/generator-helper": "^5.13.0",
+    "@prisma/sdk": "^4.0.0"
+  },
+  "bin": {
+    "prisma-generator-json-types-dto": "./dist/bin.js"
+  },
+  "files": [
+    "dist"
+  ]
+}

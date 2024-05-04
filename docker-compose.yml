@@ -1,0 +1,107 @@
+version: "3"
+
+services:
+  mysql:
+    image: mysql:8.0.27
+    restart: always
+    ports:
+      - "3306:3306"
+    volumes:
+      - database:/var/lib/mysql
+    environment:
+      - MYSQL_ROOT_PASSWORD=${DB_PASS}
+      - MYSQL_DATABASE=${DB_NAME}
+    healthcheck:
+      test: ["CMD", 'mysqladmin', 'ping', '-h', 'localhost', '-u', '${DB_USER}', '-p${DB_PASS}' ]
+      interval: 1s
+      timeout: 10s
+      retries: 50
+  # s3storage:
+  #   restart: unless-stopped
+  #   build:
+  #     context: ./data/zenko-s3/
+  #   environment:
+  #     - S3BACKEND=file
+  #     - REMOTE_MANAGEMENT_DISABLE=1
+  #     - ZENKO_S3_HOST=${ZENKO_S3_HOST}
+  #     - ZENKO_S3_ACCESS_KEY_ID=${ZENKO_S3_ACCESS_KEY_ID}
+  #     - ZENKO_S3_SECRET_ACCESS_KEY=${ZENKO_S3_SECRET_ACCESS_KEY}
+  #   volumes:
+  #     - s3storageData:/usr/src/app/localData
+  #     - s3storageMetadata:/usr/src/app/localMetadata
+  #   ports:
+  #     - "8000:8000"
+  nginx:
+    image: nginx:1.23.1
+    restart: unless-stopped
+    volumes:
+      - ./data/nginx/conf.d:/etc/nginx/conf.d
+      - ./data/nginx/www:/var/www/html
+      - ./data/certbot/conf:/etc/letsencrypt
+      - ./data/certbot/www:/var/www/certbot
+    depends_on:
+      - web
+      - docs
+      - api
+    ports:
+      - "80:80"
+      - "443:443"
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost/healthcheck" ]
+      interval: 5s
+      timeout: 10s
+      retries: 50
+    command: "/bin/sh -c 'while :; do sleep 6h & wait $${!}; nginx -s reload; done & nginx -g \"daemon off;\"'"
+  certbot:
+    image: certbot/certbot
+    restart: unless-stopped
+    volumes:
+      - ./data/certbot/conf:/etc/letsencrypt
+      - ./data/certbot/www:/var/www/certbot
+    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;'"
+  api:
+    build:
+      context: .
+      dockerfile: ./apps/api/Dockerfile
+    restart: always
+    depends_on:
+      mysql:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      PORT: 3001
+      DB_PASS: ${DB_PASS}
+      DB_USER: ${DB_USER}
+      DB_PORT: ''
+      DB_HOST: mysql
+      DB_NAME: ${DB_NAME}
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:3001/healthcheck" ]
+      interval: 5s
+      timeout: 10s
+      retries: 50
+  web:
+    build:
+      context: .
+      dockerfile: ./apps/web/Dockerfile
+    restart: always
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:3000/healthcheck" ]
+      interval: 5s
+      timeout: 10s
+      retries: 50
+  docs:
+    build:
+      context: .
+      dockerfile: ./apps/docs/Dockerfile
+    restart: always
+
+volumes:
+  database:
+    driver: local
+  # s3storageData:
+  #   driver: local
+  # s3storageMetadata:
+  #   driver: local
+  cache:
+    driver: local

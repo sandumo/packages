@@ -1,0 +1,252 @@
+[
+  {
+    "id": 1,
+    "city_id": 1,
+    "name": "Chișinău"
+  },
+  {
+    "id": 2,
+    "city_id": 2,
+    "name": "Bălți"
+  },
+  {
+    "id": 3,
+    "city_id": 3,
+    "name": "Cahul"
+  },
+  {
+    "id": 4,
+    "city_id": 4,
+    "name": "Ungheni"
+  },
+  {
+    "id": 5,
+    "city_id": 5,
+    "name": "Soroca"
+  },
+  {
+    "id": 6,
+    "city_id": 6,
+    "name": "Orhei"
+  },
+  {
+    "id": 7,
+    "city_id": 7,
+    "name": "Comrat"
+  },
+  {
+    "id": 8,
+    "city_id": 8,
+    "name": "Ceadîr-Lunga"
+  },
+  {
+    "id": 9,
+    "city_id": 9,
+    "name": "Strășeni"
+  },
+  {
+    "id": 10,
+    "city_id": 10,
+    "name": "Căușeni"
+  },
+  {
+    "id": 11,
+    "city_id": 11,
+    "name": "Drochia"
+  },
+  {
+    "id": 12,
+    "city_id": 12,
+    "name": "Edineț"
+  },
+  {
+    "id": 13,
+    "city_id": 13,
+    "name": "Vulcănești"
+  },
+  {
+    "id": 14,
+    "city_id": 14,
+    "name": "Durlești"
+  },
+  {
+    "id": 15,
+    "city_id": 15,
+    "name": "Hîncești"
+  },
+  {
+    "id": 16,
+    "city_id": 16,
+    "name": "Ialoveni"
+  },
+  {
+    "id": 17,
+    "city_id": 17,
+    "name": "Fălești"
+  },
+  {
+    "id": 18,
+    "city_id": 18,
+    "name": "Călărași"
+  },
+  {
+    "id": 19,
+    "city_id": 19,
+    "name": "Codru"
+  },
+  {
+    "id": 20,
+    "city_id": 20,
+    "name": "Taraclia"
+  },
+  {
+    "id": 21,
+    "city_id": 21,
+    "name": "Florești"
+  },
+  {
+    "id": 22,
+    "city_id": 22,
+    "name": "Cimișlia"
+  },
+  {
+    "id": 23,
+    "city_id": 23,
+    "name": "Sîngerei"
+  },
+  {
+    "id": 24,
+    "city_id": 24,
+    "name": "Congaz (Găgăuzia)"
+  },
+  {
+    "id": 25,
+    "city_id": 25,
+    "name": "Nisporeni"
+  },
+  {
+    "id": 26,
+    "city_id": 26,
+    "name": "Basarabeasca"
+  },
+  {
+    "id": 27,
+    "city_id": 27,
+    "name": "Costești (Ialoveni)"
+  },
+  {
+    "id": 28,
+    "city_id": 28,
+    "name": "Rîșcani"
+  },
+  {
+    "id": 29,
+    "city_id": 29,
+    "name": "Glodeni"
+  },
+  {
+    "id": 30,
+    "city_id": 30,
+    "name": "Rezina"
+  },
+  {
+    "id": 31,
+    "city_id": 31,
+    "name": "Leova"
+  },
+  {
+    "id": 32,
+    "city_id": 32,
+    "name": "Cărpineni (Hîncești)"
+  },
+  {
+    "id": 33,
+    "city_id": 33,
+    "name": "Cricova"
+  },
+  {
+    "id": 34,
+    "city_id": 34,
+    "name": "Dondușeni"
+  },
+  {
+    "id": 35,
+    "city_id": 35,
+    "name": "Copceac (Găgăuzia)"
+  },
+  {
+    "id": 36,
+    "city_id": 36,
+    "name": "Ocnița"
+  },
+  {
+    "id": 37,
+    "city_id": 37,
+    "name": "Baurci (Găgăuzia)"
+  },
+  {
+    "id": 38,
+    "city_id": 38,
+    "name": "Briceni"
+  },
+  {
+    "id": 39,
+    "city_id": 39,
+    "name": "Băcioi (Chișinău)"
+  },
+  {
+    "id": 40,
+    "city_id": 40,
+    "name": "Otaci"
+  },
+  {
+    "id": 41,
+    "city_id": 41,
+    "name": "Anenii Noi"
+  },
+  {
+    "id": 42,
+    "city_id": 42,
+    "name": "Ștefan Vodă"
+  },
+  {
+    "id": 43,
+    "city_id": 43,
+    "name": "Corjeuți (Briceni)"
+  },
+  {
+    "id": 44,
+    "city_id": 44,
+    "name": "Trușeni (Chișinău)"
+  },
+  {
+    "id": 45,
+    "city_id": 45,
+    "name": "Pelinia (Drochia)"
+  },
+  {
+    "id": 46,
+    "city_id": 46,
+    "name": "Râșcani (Găgăuzia)"
+  },
+  {
+    "id": 47,
+    "city_id": 47,
+    "name": "Iargara (Găgăuzia)"
+  },
+  {
+    "id": 48,
+    "city_id": 48,
+    "name": "Otaci (Găgăuzia)"
+  },
+  {
+    "id": 49,
+    "city_id": 49,
+    "name": "Vadul lui Vodă"
+  },
+  {
+    "id": 50,
+    "city_id": 50,
+    "name": "Sîngera"
+  }
+]

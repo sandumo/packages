@@ -1,0 +1,8 @@
+.leaflet-popup-content {
+  margin: 0!important;
+  width: 310px!important;
+}
+
+.leaflet-popup-content-wrapper {
+  border-radius: 6px!important;
+}

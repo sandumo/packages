@@ -1,0 +1,9 @@
+{
+  "extends": "tsconfig/ts-library-transpiled.json",
+  "include": ["."],
+  "exclude": ["dist", "build", "node_modules"],
+  "compilerOptions": {
+    "outDir": "./dist",
+    "strictPropertyInitialization": false
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "name": "package-template",
+  "version": "0.0.0",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "scripts": {
+    "lint": "eslint ./src/**/*.{ts,tsx}"
+  },
+  "devDependencies": {
+    "typescript": "^4.5.2",
+    "tsconfig": "workspace:*",
+    "eslint": "^7.32.0",
+    "eslint-config-custom": "workspace:*"
+  }
+}

@@ -1,0 +1,62 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+  previewFeatures = ["relationJoins"]
+}
+
+generator json {
+  provider = "prisma-json-types-generator"
+}
+
+generator jsonDto {
+  provider                        = "npx prisma-generator-json-types-dto"
+  output                          = "../src/types/prisma.dto.ts"
+  importTypesPath                 = "./prisma-json-types.dto"
+}
+
+datasource db {
+  provider          = "postgresql"
+  url               = env("POSTGRES_PRISMA_URL") // uses connection pooling
+  directUrl         = env("POSTGRES_URL_NON_POOLING") // uses a direct connection
+  shadowDatabaseUrl = env("POSTGRES_URL_NON_POOLING") // used for migrations
+}
+
+model User {
+  id       Int    @id @default(autoincrement())
+  email    String @unique
+  password String
+}
+
+model Product {
+  id          Int    @id @default(autoincrement())
+  title       String
+  category    String
+  description String
+  color       String
+
+  pricePerSquareMeter    Float?
+  pricePerPack           Float?
+  oldPricePerSquareMeter Float?
+
+  highlights     String[]
+  suitability    String[]
+
+  specifications Json?    @default("{}")
+  images         String[]
+  active         Boolean  @default(false)
+  referenceURL   String?
+
+  brand      String?
+  thickness  Float?
+  waterproof Boolean?
+  range      String?
+
+  /// [FileReference]
+  pictures Json[]
+
+  createdAt DateTime? @default(now())
+  updatedAt DateTime? @default(now()) @updatedAt
+  deletedAt DateTime?
+}

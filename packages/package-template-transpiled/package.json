@@ -1,0 +1,17 @@
+{
+  "name": "package-template-transpiled",
+  "version": "0.0.0",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "lint": "eslint ./src/**/*.{ts,tsx}"
+  },
+  "devDependencies": {
+    "typescript": "^4.5.2",
+    "tsconfig": "workspace:*",
+    "eslint": "^7.32.0",
+    "eslint-config-custom": "workspace:*"
+  }
+}

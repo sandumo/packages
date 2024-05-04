@@ -1,0 +1,25 @@
+{
+  "name": "@sandumo/openapi-client-generator",
+  "version": "0.0.1",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "scripts": {
+    "build": "tsc && cp ./src/lib/all.ts ./dist/raw-code.ts",
+    "dev": "tsc --watch",
+    "lint": "eslint ./src/**/*.{ts,tsx}"
+  },
+  "devDependencies": {
+    "@types/fs-extra": "^11.0.4",
+    "eslint": "^7.32.0",
+    "eslint-config-custom": "workspace:*",
+    "tsconfig": "workspace:*",
+    "typescript": "^4.5.2"
+  },
+  "files": [
+    "dist"
+  ],
+  "dependencies": {
+    "fs-extra": "^11.2.0",
+    "ts-node": "^10.0.0"
+  }
+}

@@ -1,0 +1,218 @@
+[
+  {
+    "id": 1,
+    "name": "IT, Programming",
+    "icon": "computer",
+    "name_key": "category_it_programming"
+  },
+  {
+    "id": 2,
+    "name": "Medicine, Pharmaceuticals",
+    "icon": "medical_services",
+    "name_key": "category_medicine_pharmaceuticals"
+  },
+  {
+    "id": 3,
+    "name": "Accounting, Economists",
+    "icon": "face",
+    "name_key": "category_accounting_economists"
+  },
+  {
+    "id": 4,
+    "name": "Banking, Credit",
+    "icon": "account_balance",
+    "name_key": "category_banking_credit"
+  },
+  {
+    "id": 5,
+    "name": "Managers",
+    "icon": "group",
+    "name_key": "category_managers"
+  },
+  {
+    "id": 6,
+    "name": "Drivers",
+    "icon": "directions_car",
+    "name_key": "category_drivers"
+  },
+  {
+    "id": 7,
+    "name": "Office Workers",
+    "icon": "apartment",
+    "name_key": "category_office_workers"
+  },
+  {
+    "id": 8,
+    "name": "Real Estate",
+    "icon": "maps_home_work",
+    "name_key": "category_real_estate"
+  },
+  {
+    "id": 9,
+    "name": "Government Agencies",
+    "icon": "gavel",
+    "name_key": "category_government_agencies"
+  },
+  {
+    "id": 10,
+    "name": "Security",
+    "icon": "health_and_safety",
+    "name_key": "category_security"
+  },
+  {
+    "id": 11,
+    "name": "Service Staff",
+    "icon": "sensor_occupied",
+    "name_key": "category_service_staff"
+  },
+  {
+    "id": 12,
+    "name": "Design",
+    "icon": "engineering",
+    "name_key": "category_design"
+  },
+  {
+    "id": 13,
+    "name": "Household Staff",
+    "icon": "home_work",
+    "name_key": "category_household_staff"
+  },
+  {
+    "id": 14,
+    "name": "Teachers, Training",
+    "icon": "auto_stories",
+    "name_key": "category_teachers_training"
+  },
+  {
+    "id": 15,
+    "name": "Procurement",
+    "icon": "shopping_bag",
+    "name_key": "category_procurement"
+  },
+  {
+    "id": 16,
+    "name": "Psychology",
+    "icon": "psychology",
+    "name_key": "category_psychology"
+  },
+  {
+    "id": 17,
+    "name": "Sales",
+    "icon": "attach_money",
+    "name_key": "category_sales"
+  },
+  {
+    "id": 18,
+    "name": "Engineers",
+    "icon": "engineering",
+    "name_key": "category_engineers"
+  },
+  {
+    "id": 19,
+    "name": "Work Abroad",
+    "icon": "travel_explore",
+    "name_key": "category_work_abroad"
+  },
+  {
+    "id": 20,
+    "name": "Production",
+    "icon": "precision_manufacturing",
+    "name_key": "category_production"
+  },
+  {
+    "id": 21,
+    "name": "Foreign Languages",
+    "icon": "translate",
+    "name_key": "category_foreign_languages"
+  },
+  {
+    "id": 22,
+    "name": "Telephone Work, Call-Centers",
+    "icon": "local_phone",
+    "name_key": "category_telephone_call_centers"
+  },
+  {
+    "id": 23,
+    "name": "Jurisprudence",
+    "icon": "balance",
+    "name_key": "category_jurisprudence"
+  },
+  {
+    "id": 24,
+    "name": "HR, Recruiting",
+    "icon": "contact_page",
+    "name_key": "category_hr_recruiting"
+  },
+  {
+    "id": 25,
+    "name": "Top Management",
+    "icon": "supervisor_account",
+    "name_key": "category_top_management"
+  },
+  {
+    "id": 26,
+    "name": "Entertainment, Casino, Show Business",
+    "icon": "casino",
+    "name_key": "category_entertainment_casino_show_business"
+  },
+  {
+    "id": 27,
+    "name": "Beauty, Fitness, Sports",
+    "icon": "sports_soccer",
+    "name_key": "category_beauty_fitness_sports"
+  },
+  {
+    "id": 28,
+    "name": "Transport and Logistics",
+    "icon": "local_shipping",
+    "name_key": "category_transport_logistics"
+  },
+  {
+    "id": 29,
+    "name": "Miscellaneous Loaders",
+    "icon": "manage_accounts",
+    "name_key": "category_miscellaneous_loaders"
+  },
+  {
+    "id": 30,
+    "name": "Culture, Art",
+    "icon": "color_lens",
+    "name_key": "category_culture_art"
+  },
+  {
+    "id": 31,
+    "name": "Mass Media, Journalism",
+    "icon": "language",
+    "name_key": "category_mass_media_journalism"
+  },
+  {
+    "id": 32,
+    "name": "Restaurants, Catering",
+    "icon": "restaurant",
+    "name_key": "category_restaurants_catering"
+  },
+  {
+    "id": 33,
+    "name": "Agriculture",
+    "icon": "agriculture",
+    "name_key": "category_agriculture"
+  },
+  {
+    "id": 34,
+    "name": "Tourism, Hotel Business",
+    "icon": "flight",
+    "name_key": "category_tourism_hotel_business"
+  },
+  {
+    "id": 35,
+    "name": "Network Marketing",
+    "icon": "hub",
+    "name_key": "category_network_marketing"
+  },
+  {
+    "id": 36,
+    "name": "Marketing, Advertising, PR",
+    "icon": "interests",
+    "name_key": "category_marketing_advertising_pr"
+  }
+]

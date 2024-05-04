@@ -1,0 +1,44 @@
+{
+  "$schema": "https://turborepo.org/schema.json",
+  "pipeline": {
+    "build": {
+      "dependsOn": [
+        "^build"
+      ],
+      "outputs": [
+        "dist/**",
+        ".next/**"
+      ]
+    },
+    "lint": {
+      "cache": false,
+      "outputs": []
+    },
+    "dev": {
+      "cache": false
+    },
+    "debug": {
+      "cache": false
+    },
+    "start": {
+      "outputs": [
+        "dist/**",
+        "build/**"
+      ]
+    },
+    "autogen": {
+      "cache": false,
+      "outputs": []
+    }
+  },
+  "globalEnv": [
+    "NEXT_PUBLIC_GOOGLE_CLIENT_ID",
+    "NEXT_PUBLIC_API_URL",
+    "NEXT_PUBLIC_JWT_SECRET",
+    "NEXT_PUBLIC_JWT_EXPIRATION",
+    "NEXT_PUBLIC_JWT_REFRESH_TOKEN_SECRET",
+    "INTERNAL_API_URL",
+    "APP_BASE_PATH",
+    "NEXT_PUBLIC_STORYBOOK_BASE_URL"
+  ]
+}

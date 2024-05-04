@@ -1,0 +1,1 @@
+{ "{components,fonts,layouts,themes}/**/*.{ts,tsx}": "eslint --fix" }

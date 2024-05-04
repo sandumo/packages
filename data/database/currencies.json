@@ -1,0 +1,20 @@
+[
+  {
+    "id": 1,
+    "code": "MDL",
+    "name": "MDL",
+    "symbol": "MDL"
+  },
+  {
+    "id": 2,
+    "code": "EUR",
+    "name": "EUR",
+    "symbol": "EUR"
+  },
+  {
+    "id": 3,
+    "code": "USD",
+    "name": "USD",
+    "symbol": "$"
+  }
+]

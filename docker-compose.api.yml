@@ -1,0 +1,27 @@
+version: "3"
+
+services:
+  api:
+    build:
+      context: .
+      dockerfile: ./apps/api/Dockerfile
+      args:
+        NPM_TOKEN: ${NPM_TOKEN}
+    restart: always
+    environment:
+      NODE_ENV: production
+      DB_HOST: host.docker.internal
+      PORT: 3001
+      POSTGRES_URL: ${POSTGRES_URL}
+      POSTGRES_PRISMA_URL: ${POSTGRES_PRISMA_URL}
+      POSTGRES_URL_NON_POOLING: ${POSTGRES_URL_NON_POOLING}
+      POSTGRES_HOST: ${POSTGRES_HOST}
+    ports:
+      - "${PORT}:3001"
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:3001/healthcheck" ]
+      interval: 5s
+      timeout: 10s
+      retries: 50
+    extra_hosts:
+      - "host.docker.internal:host-gateway"

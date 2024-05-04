@@ -1,0 +1,66 @@
+version: "3"
+
+services:
+  mysql:
+    image: mysql:8.0.27
+    container_name: mysql
+    restart: always
+    volumes:
+      - database:/var/lib/mysql
+    environment:
+      - MYSQL_ROOT_PASSWORD=root
+      - MYSQL_DATABASE=jobber
+    healthcheck:
+      test: ["CMD", 'mysqladmin', 'ping', '-hlocalhost', '-u', 'root', '-proot' ]
+      interval: 1s
+      timeout: 10s
+      retries: 50
+    platform: linux/amd64
+  nginx:
+    container_name: nginx
+    restart: always
+    build:
+      context: .
+      dockerfile: Dockerfile.nginx
+    depends_on:
+      - web
+      - api
+    ports:
+      - "80:80"
+  api:
+    container_name: api
+    build:
+      context: .
+      dockerfile: ./apps/api/Dockerfile
+    restart: always
+    depends_on:
+      mysql:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      DB_PASS: root
+      DB_USER: root
+      DB_PORT: ''
+      DB_HOST: mysql
+      DB_NAME: jobber
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:3001" ]
+      interval: 5s
+      timeout: 10s
+      retries: 50
+    platform: linux/amd64
+  web:
+    container_name: web
+    build:
+      context: .
+      dockerfile: ./apps/web/Dockerfile
+    restart: always
+    platform: linux/amd64
+
+volumes:
+  database:
+    driver: local
+  storage:
+    driver: local
+  cache:
+    driver: local

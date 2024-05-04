@@ -1,0 +1,78 @@
+.scrollbar-xy {
+  overflow: overlay;
+}
+
+.scrollbar-y {
+  overflow-y: overlay;
+}
+
+.scrollbar-x {
+  overflow-x: overlay;
+}
+
+.scrollbar {
+  z-index: 999999;
+  /* overflow: scroll; */
+}
+
+.scrollbar::-webkit-scrollbar {
+  background-color: rgba(0,0,0,0);
+  width: 6px;
+  height: 6px;
+  z-index: 999999;
+  transition: 0.2s;
+}
+
+.scrollbar::-webkit-scrollbar-track {
+  background-color: rgba(0,0,0,0);
+}
+
+.scrollbar::-webkit-scrollbar-thumb {
+  border-radius: 10px;
+  border: 1px transparent;
+}
+
+.scrollbar::-webkit-scrollbar-button {
+  display: none;
+}
+
+.scrollbar:hover::-webkit-scrollbar-thumb {
+  background-color: rgba(0, 0, 0, .2);  
+}
+
+.scrollbar::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(0, 0, 0, .2);
+}
+
+/* body {
+  overflow-y: overlay
+}
+
+body::-webkit-scrollbar {
+  background-color: rgba(0,0,0,0);
+  width: 10px;
+  height: 6px;
+  z-index: 999999;
+  transition: 0.2s;
+}
+
+body::-webkit-scrollbar-track {
+  background-color: rgba(0,0,0,0);
+}
+
+body::-webkit-scrollbar-thumb {
+  border-radius: 10px;
+  border: 1px transparent;
+}
+
+body::-webkit-scrollbar-button {
+  display: none;
+}
+
+body:hover::-webkit-scrollbar-thumb {
+  background-color: rgba(0, 0, 0, .2);  
+}
+
+body::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(0, 0, 0, .2);
+} */
