@@ -1,6 +1,6 @@
 {
   "name": "@sandumo/prisma-generator-json-types-dto",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "main": "./dist/generator.js",
   "types": "./dist/generator.d.ts",
   "scripts": {
@@ -25,5 +25,23 @@
   },
   "files": [
     "dist"
-  ]
+  ],
+  "description": "This package generates Dtos enhanced with custom JSON types for Prisma models.",
+  "keywords": [
+    "prisma",
+    "generator",
+    "dto",
+    "json",
+    "types"
+  ],
+  "homepage": "https://github.com/sandumo/packages/blob/main/packages/prisma-generator-json-types-dto/README.md",
+  "author": {
+    "name": "Sandu Morari",
+    "email": "sandu.m.md@gmail.com",
+    "url": "https://github.com/sandumorari"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/sandumo/packages.git"
+  }
 }
