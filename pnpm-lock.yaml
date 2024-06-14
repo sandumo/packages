@@ -12,8 +12,8 @@ importers:
   .:
     devDependencies:
       '@sandumo/prisma-generator-json-types-dto':
-        specifier: ^0.0.1
-        version: 0.0.1(prisma@5.12.1)
+        specifier: ^0.0.5
+        version: 0.0.5(prisma@5.12.1)
       '@storybook/addon-essentials':
         specifier: ^7.5.3
         version: 7.6.5(@types/react-dom@18.0.7)(@types/react@18.2.78)(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
@@ -196,8 +196,8 @@ importers:
         specifier: workspace:*
         version: link:../../packages/openapi-client-generator
       '@sandumo/prisma-generator-json-types-dto':
-        specifier: ^0.0.1
-        version: 0.0.1(prisma@5.7.1)
+        specifier: ^0.0.5
+        version: 0.0.5(prisma@5.7.1)
       '@types/express':
         specifier: ^4.17.13
         version: 4.17.14
@@ -3349,8 +3349,8 @@ packages:
   '@rushstack/eslint-patch@1.2.0':
     resolution: {integrity: sha512-sXo/qW2/pAcmT43VoRKOJbDOfV3cYpq3szSVfIThQXNt+E4DfKj361vaAt3c88U5tPUxzEswam7GW48PJqtKAg==}
 
-  '@sandumo/prisma-generator-json-types-dto@0.0.1':
-    resolution: {integrity: sha512-AMo8JcYH1SkS6VBTtofMq9S7bz9wHR3N2NybE4h0Wp+2f4wv8QqZytKysRUA70gOjNpaoc2JscnI32CnFCtZUA==}
+  '@sandumo/prisma-generator-json-types-dto@0.0.5':
+    resolution: {integrity: sha512-EnYwGIbcOAnabc3cpyLmSzqPQGOwSqm0sW4x0ei0HhA3bKJJOvg70CsI8Kib3xyT9dMUu50HVK+iTz1w2i44Cg==, tarball: https://npm.pkg.github.com/download/@sandumo/prisma-generator-json-types-dto/0.0.5/d9bd6afd7da3103b6ca30293b78f68c78ccd997c}
     hasBin: true
 
   '@sinclair/typebox@0.24.51':
@@ -13317,7 +13317,7 @@ snapshots:
 
   '@rushstack/eslint-patch@1.2.0': {}
 
-  '@sandumo/prisma-generator-json-types-dto@0.0.1(prisma@5.12.1)':
+  '@sandumo/prisma-generator-json-types-dto@0.0.5(prisma@5.12.1)':
     dependencies:
       '@prisma/client': 5.13.0(prisma@5.12.1)
       '@prisma/generator-helper': 5.13.0
@@ -13327,7 +13327,7 @@ snapshots:
       - prisma
       - supports-color
 
-  '@sandumo/prisma-generator-json-types-dto@0.0.1(prisma@5.7.1)':
+  '@sandumo/prisma-generator-json-types-dto@0.0.5(prisma@5.7.1)':
     dependencies:
       '@prisma/client': 5.13.0(prisma@5.7.1)
       '@prisma/generator-helper': 5.13.0

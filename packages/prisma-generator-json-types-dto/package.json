@@ -1,6 +1,6 @@
 {
   "name": "@sandumo/prisma-generator-json-types-dto",
-  "version": "0.0.2",
+  "version": "0.0.6",
   "main": "./dist/generator.js",
   "types": "./dist/generator.d.ts",
   "scripts": {

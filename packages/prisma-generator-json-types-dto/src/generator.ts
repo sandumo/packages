@@ -36,7 +36,7 @@ generatorHandler({
     options.dmmf.datamodel.models.forEach(async (model) => {
       content += `${content && '\n'}export class ${model.name} {\n${model.fields
         .map((field) => {
-          const { isRequired, isList, type, documentation } = field;
+          const { isRequired, isList, type, documentation, kind } = field;
 
           let tsType = typeMappings[type] || type;
 
@@ -47,7 +47,7 @@ generatorHandler({
             } catch (e) {}
           }
 
-          return `  ${field.name}: ${tsType}${isList ? '[]' : ''}${isRequired ? '' : ' | null'};`;
+          return `  ${field.name}${kind === 'object' ? '?' : ''}: ${tsType}${isList ? '[]' : ''}${isRequired || tsType ? '' : ' | null'};`;
         })
         .join('\n')}\n}\n`;
     });

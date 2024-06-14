@@ -19,7 +19,7 @@
     "storybook:build": "storybook build"
   },
   "devDependencies": {
-    "@sandumo/prisma-generator-json-types-dto": "^0.0.1",
+    "@sandumo/prisma-generator-json-types-dto": "^0.0.5",
     "@storybook/addon-essentials": "^7.5.3",
     "@storybook/addon-interactions": "^7.5.3",
     "@storybook/addon-links": "^7.5.3",
