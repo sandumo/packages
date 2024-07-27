@@ -1,11 +1,11 @@
-const sharedConfig = require('../../packages/ui-old/tailwind.config');
+const sharedConfig = require('../../packages/ui/tailwind.config');
 
 /** @type {import('tailwindcss').Config} */
 module.exports = {
   ...sharedConfig,
   content: [
     "./src/**/*.{js,ts,jsx,tsx,mdx}",
-    "@sandumo/ui/**/*.{js,ts,jsx,tsx,mdx}"
+    "../../packages/ui/src/**/*.{js,ts,jsx,tsx,mdx}"
   ],
   theme: {
     ...sharedConfig.theme,

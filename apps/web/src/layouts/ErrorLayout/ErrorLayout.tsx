@@ -1,4 +1,4 @@
-import { Link } from '@components';
+import { Link } from '@sandumo/ui';
 import { Box } from '@mui/material';
 import { PropsWithChildren } from 'react';
 
