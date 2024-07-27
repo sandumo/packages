@@ -1,8 +1,11 @@
 {
   "name": "@sandumo/nestjs-openai-module",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "build": "tsc",
     "dev": "tsc --watch",
@@ -17,5 +20,21 @@
   "dependencies": {
     "@nestjs/common": "^9.0.0",
     "openai": "^4.0.0"
+  },
+  "description": "This package provides a NestJS module for interacting with OpenAI.",
+  "keywords": [
+    "openai",
+    "nestjs",
+    "module"
+  ],
+  "homepage": "https://github.com/sandumo/packages/blob/main/packages/nestjs-openai-module/README.md",
+  "author": {
+    "name": "Sandu Morari",
+    "email": "sandu.m.md@gmail.com",
+    "url": "https://github.com/sandumorari"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/sandumo/packages.git"
   }
 }

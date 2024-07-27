@@ -12,7 +12,7 @@ import authConfig from 'src/configs/auth';
 
 // ** Types
 import { AuthValuesType, RegisterParams, LoginParams, ErrCallbackType, UserDataType } from './types';
-import { USER_STATUS, USER_TYPE } from 'utils';
+import { USER_STATUS, USER_TYPE } from '@sandumo/utils';
 import api from 'api-client';
 
 // ** Defaults

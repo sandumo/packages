@@ -15,7 +15,7 @@ import {
   UpdateProductPicturesDto,
 } from './product.dto';
 import { Product } from '@prisma/client';
-import { omit } from 'utils';
+import { omit } from '@sandumo/utils';
 
 @Injectable()
 export class ProductService {

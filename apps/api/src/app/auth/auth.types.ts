@@ -1,4 +1,4 @@
-import { USER_STATUS } from 'utils';
+import { USER_STATUS } from '@sandumo/utils';
 
 export type PartialUserData = {
   email: string;

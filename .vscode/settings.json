@@ -3,5 +3,11 @@
     "source.fixAll.eslint": "explicit"
   },
   "eslint.validate": ["javascript"],
-  "debug.inlineValues": "on"
+  "debug.inlineValues": "on",
+  "tailwindCSS.includeLanguages": {
+    "typescript": "html",
+    "typescriptreact": "html",
+    "javascript": "html",
+    "javascriptreact": "html"
+  }
 }

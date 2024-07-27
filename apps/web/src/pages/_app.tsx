@@ -73,15 +73,13 @@ import ContextSettings from '@configs/ContextSettings';
 
 import { LocalizationProvider } from '@mui/x-date-pickers';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
-import { AdminLayout, EmployeeLayout, EmployerLayout } from '@layouts';
-import { DialogConfirmProvider } from '@context/DialogConfirmContext';
-import { ThemeProvider, createEmotionCache } from 'ui';
+
+import { ThemeProvider, createEmotionCache } from '@sandumo/ui';
 import { UserDataType } from '@context/types';
 
 import { Analytics } from '@vercel/analytics/react';
 
 import { SpeedInsights } from '@vercel/speed-insights/next';
-import { BasketProvider } from '@context/BasketContext';
 
 // ** Extend App Props with Emotion
 type ExtendedAppProps = AppProps & {
@@ -95,6 +93,8 @@ type GuardProps = {
   guestGuard: boolean
   children: ReactNode
 }
+
+import '@sandumo/ui/styles';
 
 const clientSideEmotionCache = createEmotionCache();
 
@@ -152,11 +152,11 @@ const App = (props: ExtendedAppProps) => {
     getLayout = Component.getLayout;
   } else {
     if (router.pathname.startsWith('/employee')) {
-      getLayout = (page: ReactNode, title?: string) => <EmployeeLayout title={title} >{page}</EmployeeLayout>;
+      getLayout = (page: ReactNode, title?: string) => page;
     } else if (router.pathname.startsWith('/employer')) {
-      getLayout = (page: ReactNode) => <EmployerLayout>{page}</EmployerLayout>;
+      getLayout = (page: ReactNode) => page;
     } else if (router.pathname.startsWith('/admin')) {
-      getLayout = (page: ReactNode) => <AdminLayout>{page}</AdminLayout>;
+      getLayout = (page: ReactNode) => page;
     }
   }
 
@@ -184,13 +184,9 @@ const App = (props: ExtendedAppProps) => {
             <ThemeProvider>
               <QueryClientProvider client={queryClient}>
                 <ContextSettings />
-                <DialogConfirmProvider>
-                  <BasketProvider>
-                    {getLayout(<Component {...pageProps} />, (Component as any)?.title)}
-                    <Analytics />
-                    <SpeedInsights />
-                  </BasketProvider>
-                </DialogConfirmProvider>
+                {getLayout(<Component {...pageProps} />, (Component as any)?.title)}
+                <Analytics />
+                <SpeedInsights />
               </QueryClientProvider>
             </ThemeProvider>
           </AuthProvider>

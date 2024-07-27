@@ -8,7 +8,7 @@ import Document, { Html, Head, Main, NextScript } from 'next/document';
 
 // ** Utils Imports
 // import { createEmotionCache } from 'src/@core/utils/create-emotion-cache';
-import { getEmotionCacheInitialProps } from 'ui';
+import { getEmotionCacheInitialProps } from '@sandumo/ui';
 
 class CustomDocument extends Document {
   render() {

@@ -1,0 +1,41 @@
+{
+  "name": "@sandumo/nestjs-prisma-module",
+  "version": "0.0.1",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "lint": "eslint ./src/**/*.{ts,tsx}"
+  },
+  "devDependencies": {
+    "eslint": "^7.32.0",
+    "eslint-config-custom": "workspace:*",
+    "tsconfig": "workspace:*",
+    "typescript": "^4.5.2"
+  },
+  "dependencies": {
+    "@nestjs/common": "^9.0.0",
+    "@prisma/client": "^5.15.0",
+    "prisma-extension-soft-delete": "^1.0.1"
+  },
+  "description": "This package provides a NestJS module for interacting with Prisma.",
+  "keywords": [
+    "prisma",
+    "nestjs",
+    "module"
+  ],
+  "homepage": "https://github.com/sandumo/packages/blob/main/packages/nestjs-prisma-module/README.md",
+  "author": {
+    "name": "Sandu Morari",
+    "email": "sandu.m.md@gmail.com",
+    "url": "https://github.com/sandumorari"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/sandumo/packages.git"
+  }
+}

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { Environment } from './configs/env';
-import { USER_STATUS, USER_TYPE } from 'utils';
+import { USER_STATUS, USER_TYPE } from '@sandumo/utils';
 
 export async function middleware(request: NextRequest) {
   return NextResponse.next();
