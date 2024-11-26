@@ -14,7 +14,7 @@
     "lint": "turbo run lint",
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
     "prepare": "husky install",
-    "flush": "rimraf node_modules apps/*/node_modules packages/*/node_modules apps/api/dist apps/web/.next",
+    "flush": "rimraf node_modules apps/*/node_modules packages/*/node_modules apps/api/dist apps/apiest/dist apps/web/.next",
     "storybook": "storybook dev -p 6006",
     "storybook:build": "storybook build"
   },
@@ -53,5 +53,6 @@
     "overrides": {
       "@types/react": "18.2.78"
     }
-  }
+  },
+  "packageManager": "pnpm@9.0.1"
 }

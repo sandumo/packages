@@ -1,0 +1,122 @@
+generator client {
+  provider = "prisma-client-js"
+  previewFeatures = ["relationJoins"]
+}
+
+datasource db {
+  provider          = "postgresql"
+  url               = env("POSTGRES_PRISMA_URL") // uses connection pooling
+  directUrl         = env("POSTGRES_URL_NON_POOLING") // uses a direct connection
+  // shadowDatabaseUrl = env("POSTGRES_URL_NON_POOLING") // used for migrations
+}
+
+model Product {
+  id Int @id @default(autoincrement())
+  category String
+  price Float
+  discount Float?
+  highlights String[]
+  active Boolean @default(false)
+  pictures Json[]
+  translations ProductTranslation[]
+  createdAt DateTime? @default(now())
+  updatedAt DateTime? @default(now()) @updatedAt
+  deletedAt DateTime?
+}
+
+model ProductTranslation {
+  productId Int
+  product Product @relation(fields: [productId], references: [id])
+  languageId Int
+  language Language @relation(fields: [languageId], references: [id])
+  @@id([productId, languageId])
+  name String
+}
+
+model Category {
+  id Int @id @default(autoincrement())
+  name String
+  createdAt DateTime? @default(now())
+  updatedAt DateTime? @default(now()) @updatedAt
+  deletedAt DateTime?
+}
+
+model Post {
+  id Int @id @default(autoincrement())
+  comments Comment[] @relation("post")
+  moderated Boolean @default(false)
+  status String @default("draft")
+  hash String?
+  owner User? @relation("owner", fields: [ownerId], references: [id])
+  ownerId Int?
+  author User? @relation("author", fields: [authorId], references: [id])
+  authorId Int?
+  translations PostTranslation[]
+  createdAt DateTime? @default(now())
+  updatedAt DateTime? @default(now()) @updatedAt
+  deletedAt DateTime?
+}
+
+model PostTranslation {
+  postId Int
+  post Post @relation(fields: [postId], references: [id])
+  languageId Int
+  language Language @relation(fields: [languageId], references: [id])
+  @@id([postId, languageId])
+  title String
+  content String?
+}
+
+model Comment {
+  id Int @id @default(autoincrement())
+  post Post @relation("post", fields: [postId], references: [id])
+  postId Int
+  translations CommentTranslation[]
+  createdAt DateTime? @default(now())
+  updatedAt DateTime? @default(now()) @updatedAt
+  deletedAt DateTime?
+}
+
+model CommentTranslation {
+  commentId Int
+  comment Comment @relation(fields: [commentId], references: [id])
+  languageId Int
+  language Language @relation(fields: [languageId], references: [id])
+  @@id([commentId, languageId])
+  content String
+}
+
+model User {
+  id Int @id @default(autoincrement())
+  email String
+  phone String
+  password String
+  firstname String?
+  lastname String?
+  displayName String?
+  avatar Json?
+  permissions String[]
+  postOwner Post[] @relation("owner")
+  postAuthor Post[] @relation("author")
+  createdAt DateTime? @default(now())
+  updatedAt DateTime? @default(now()) @updatedAt
+  deletedAt DateTime?
+}
+
+model Language {
+  id Int @id @default(autoincrement())
+  locale String
+  name String
+  nativeName String
+  direction String @default("LTR")
+  active Boolean @default(false)
+  fallback Language? @relation("FallbackRelation", fields: [fallbackId], references: [id])
+  fallbackId Int? @unique
+  fallbackRelation Language? @relation("FallbackRelation")
+  products ProductTranslation[]
+  posts PostTranslation[]
+  comments CommentTranslation[]
+  createdAt DateTime? @default(now())
+  updatedAt DateTime? @default(now()) @updatedAt
+  deletedAt DateTime?
+}

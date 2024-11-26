@@ -1,0 +1,35 @@
+{
+  "name": "api",
+
+  "schema": {
+    "product": {
+      "plural": "products",
+      "access": ["*:deny", "*:write:own"],
+
+      "fields": {
+        "id": "integer PK",
+        "name": "string required translatable",
+        "price": "integer required",
+        "pictures": "FileReference[]"
+      }
+    },
+    "order": {
+      "plural": "orders",
+      "access": "public",
+
+      "fields": {
+        "id": "integer PK"
+      }
+    },
+    "order_item": {
+      "id": "integer PK",
+      "order_id": "integer FK",
+      "product_id": "integer FK",
+      "quantity": "integer required"
+    }
+  },
+
+  "users": {
+
+  }
+}

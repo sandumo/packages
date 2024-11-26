@@ -5,7 +5,7 @@ module.exports = {
     "@next/next/no-html-link-for-pages": "off",
     "react/jsx-key": "off",
     "quotes": ["error", "single", { "avoidEscape": true }],
-    "unused-imports/no-unused-imports": "error",
+    // "unused-imports/no-unused-imports": "error",
     "semi": ["error"],
     "no-extra-semi": ["error"],
     "comma-dangle": ["error", "always-multiline"],

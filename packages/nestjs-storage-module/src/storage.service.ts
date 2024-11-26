@@ -9,7 +9,7 @@ import { STORAGE_MODULE_OPTIONS, StorageModuleOptions } from './storage.options'
 export class StorageService {
   S3: AWS.S3;
   private BUCKET: string;
-
+  private ROOT_PATH: string;
   constructor(
     @Inject(STORAGE_MODULE_OPTIONS) private options: StorageModuleOptions,
   ) {
@@ -22,8 +22,10 @@ export class StorageService {
         signatureVersion: 'v4',
         sslEnabled: false,
         correctClockSkew: true,
+        region: 'us-east-1',
       });
       this.BUCKET = this.options.s3Bucket;
+      this.ROOT_PATH = this.options.rootPath ? this.options.rootPath + (this.options.rootPath.endsWith('/') ? '' : '/') : '';
       this.createBucket();
     } catch (error) {
       console.error(error);
@@ -129,5 +131,86 @@ export class StorageService {
         return this.S3.createBucket({ Bucket: this.BUCKET }).promise();
       }
     }
+  }
+
+  uploadFiles(files: Express.Multer.File[], getFilepath?: (file: Express.Multer.File) => string): Promise<any[]> {
+    return Promise.all(
+      files.map(async (file) => {
+        if (file.mimetype === 'application/file-reference') {
+
+          const json = JSON.parse(file.buffer.toString());
+
+          return json;
+        }
+
+        const filepath = this.ROOT_PATH + (getFilepath(file) ||
+          (
+            'unnamed/' +
+            require('crypto').randomBytes(32).toString('hex') +
+            '.' +
+            file.originalname.split('.').pop()
+          )
+        );
+
+        await this.putObject(filepath, file.buffer);
+
+        return {
+          name: file.originalname,
+          path: filepath,
+          type: file.mimetype,
+          size: file.size,
+        } as unknown; // as FileReference;
+      }),
+    );
+  }
+
+  async uploadFile(file: Express.Multer.File, filepath?: string): Promise<any> {
+
+    if (file.mimetype === 'application/file-reference') {
+
+      const json = JSON.parse(file.buffer.toString());
+
+      return json;
+    }
+
+    if (!filepath) {
+      filepath =
+        this.ROOT_PATH +
+        'unnamed/' +
+        require('crypto').randomBytes(32).toString('hex') +
+        '.' +
+        file.originalname.split('.').pop();
+    } else {
+      filepath = this.ROOT_PATH + filepath;
+    }
+
+    await this.putObject(filepath, file.buffer);
+
+    return {
+      name: file.originalname,
+      path: filepath,
+      type: file.mimetype,
+      size: file.size,
+    };
+  }
+
+  async renameFile(oldPath: string, newPath: string) {
+    console.log('[x] bucket=', this.BUCKET, ', oldPath=', this.BUCKET + '/' + this.ROOT_PATH + oldPath, ', newPath=', newPath);
+
+    await this.S3.copyObject({
+      Bucket: this.BUCKET,
+      CopySource: this.BUCKET + '/' + this.ROOT_PATH + oldPath,
+      Key: this.ROOT_PATH + newPath,
+    }).promise();
+
+    // delete old file
+    await this.S3.deleteObject({
+      Bucket: this.BUCKET,
+      Key: this.ROOT_PATH + oldPath,
+    }).promise();
+  }
+
+  getRandomKey() {
+    return require('crypto').randomBytes(32).toString('hex');
   }
 }
