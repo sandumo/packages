@@ -107,6 +107,15 @@ export const inputSchema: InputSchema = {
         displayName: 'string nullable',
         avatar: 'file nullable',
         permissions: 'string iterable',
+        role: 'ref(role.id) nullable',
+      },
+    },
+
+    role: {
+      name: 'Role',
+      fields: {
+        id: 'integer PK',
+        name: 'string',
       },
     },
 

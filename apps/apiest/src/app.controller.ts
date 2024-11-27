@@ -17,6 +17,7 @@ import { schema, router } from './schema';
 import { getIdentificationFilter } from 'engine/utils';
 import { User } from 'engine/types';
 import { filterPermissions, parsePermission } from 'engine/rules';
+import { PermissionParser } from 'engine/permissions';
 
 const user: User = {
   id: 1,
@@ -60,10 +61,41 @@ export class AppController {
       throw new NotFoundException();
     }
 
+    // const permission = parsePermission2('read.post.[author.displayName]');
+
+    // console.log(
+    //   '[x] permission=',
+    //   (parser.parse()?.resource[0] as any).children,
+    // );
+
     // console.log('[x] query=', query);
     // return {};
 
     const resource = schema.resources[router[resourceKey]];
+
+    const permissions = [
+      // 'read.post.[title,content,author.[displayName]]',
+      // 'read.post.[title,content,author.[id]]',
+      // 'read.post.[comments]',
+      // 'read.role',
+      // 'read.comment',
+
+      'read.post.[author.[id,displayName,role],comments]',
+      // 'read.post.[author.[displayName]]',
+      // 'read.post.[author.[role]]',
+      // 'read.post.[author.[id,email]]',
+      // 'read.post.[comments]',
+      // 'create.post',
+      // 'read.role.[name]',
+    ];
+
+    const include = ['author.role', 'comments'];
+
+    const parser = new PermissionParser(schema, permissions);
+
+    console.log('[x] permission=', parser.tree('read', resource, include));
+
+    return {};
 
     // reject if more than 2 parts
     if (parts.length > 2) {
