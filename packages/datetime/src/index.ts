@@ -66,6 +66,48 @@ export class Datetime {
   toString(): string {
     return this.datetime.toString();
   }
+
+  timeFrom<T extends 'second' | 'minute' | 'hour' | 'day' | 'month' | 'year' | 'seconds' | 'minutes' | 'hours' | 'days' | 'months' | 'years'>(datetime?: DatetimeInput | Datetime): [value: number, unit: T] {
+    let datetimeFrom = dayjs();
+
+    if (datetime) {
+      if (datetime instanceof Datetime) {
+        datetimeFrom = datetime.datetime;
+      } else {
+        datetimeFrom = dayjs(datetime);
+      }
+    }
+
+    let value = datetimeFrom.diff(this.datetime, 'second');
+    let unit: T = 'second' + (value === 1 ? '' : 's') as T;
+
+    if (value > 60) {
+      value = datetimeFrom.diff(this.datetime, 'minute');
+      unit = 'minute' + (value === 1 ? '' : 's') as T;
+
+      if (value > 60) {
+        value = datetimeFrom.diff(this.datetime, 'hour');
+        unit = 'hour' + (value === 1 ? '' : 's') as T;
+
+        if (value > 24) {
+          value = datetimeFrom.diff(this.datetime, 'day');
+          unit = 'day' + (value === 1 ? '' : 's') as T;
+
+          if (value > 30) {
+            value = datetimeFrom.diff(this.datetime, 'month');
+            unit = 'month' + (value === 1 ? '' : 's') as T;
+
+            if (value > 12) {
+              value = datetimeFrom.diff(this.datetime, 'year');
+              unit = 'year' + (value === 1 ? '' : 's') as T;
+            }
+          }
+        }
+      }
+    }
+
+    return [value, unit];
+  }
 }
 
 export default function datetime(datetime?: DatetimeInput): Datetime {
