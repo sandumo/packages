@@ -1,51 +1,52 @@
 import { ReadStream } from 'fs';
-import * as AWS from 'aws-sdk';
-import { PromiseResult } from 'aws-sdk/lib/request';
-import { Inject, Injectable, InternalServerErrorException } from '@nestjs/common';
+import { S3Client, GetObjectCommand, PutObjectCommand, ListBucketsCommand, CreateBucketCommand, DeleteObjectCommand, CopyObjectCommand } from '@aws-sdk/client-s3';
+import { Inject, Injectable } from '@nestjs/common';
 import { Stream } from 'stream';
 import { STORAGE_MODULE_OPTIONS, StorageModuleOptions } from './storage.options';
+import { Readable } from 'stream';
+import { randomBytes } from 'crypto';
 
 @Injectable()
 export class StorageService {
-  S3: AWS.S3;
+  private s3Client: S3Client;
   private BUCKET: string;
   private ROOT_PATH: string;
-  constructor(
-    @Inject(STORAGE_MODULE_OPTIONS) private options: StorageModuleOptions,
-  ) {
+  private UNNAMED_ROOT_PATH: string;
+  private _isUp: boolean;
+
+  constructor(@Inject(STORAGE_MODULE_OPTIONS) private options: StorageModuleOptions) {
     try {
-      this.S3 = new AWS.S3({
-        accessKeyId: this.options.s3AccessKeyId,
-        secretAccessKey: this.options.s3SecretAccessKey,
-        endpoint: this.options.s3Endpoint,
-        s3ForcePathStyle: true,
-        signatureVersion: 'v4',
-        sslEnabled: false,
-        correctClockSkew: true,
-        region: 'us-east-1',
+      this.s3Client = new S3Client({
+        credentials: {
+          accessKeyId: this.options.accessKeyId,
+          secretAccessKey: this.options.secretAccessKey,
+        },
+        endpoint: this.options.endpoint,
+        region: this.options.region || 'us-east-1',
+        forcePathStyle: true,
       });
-      this.BUCKET = this.options.s3Bucket;
+      this.BUCKET = this.options.bucket || 'default';
       this.ROOT_PATH = this.options.rootPath ? this.options.rootPath + (this.options.rootPath.endsWith('/') ? '' : '/') : '';
       this.createBucket();
+      this._isUp = true;
+      this.UNNAMED_ROOT_PATH = this.options.unnamedRootPath ? this.ROOT_PATH + this.options.unnamedRootPath + (this.options.unnamedRootPath.endsWith('/') ? '' : '/') : this.ROOT_PATH + 'unnamed/';
     } catch (error) {
       console.error(error);
     }
   }
 
   private isUp() {
-    return !!this.S3;
+    return this._isUp;
   }
 
-  async getObject(
-    key: string,
-  ): Promise<PromiseResult<AWS.S3.GetObjectOutput, AWS.AWSError>> {
+  async getObject(key: string): Promise<Readable> {
     if (!this.isUp()) {
       return null;
     }
 
-    const params = { Bucket: this.BUCKET, Key: key };
-
-    return await this.S3.getObject(params).promise();
+    const command = new GetObjectCommand({ Bucket: this.BUCKET, Key: key });
+    const response = await this.s3Client.send(command);
+    return response.Body as Readable;
   }
 
   async putObject(blobName: string, blob: Buffer): Promise<any> {
@@ -53,67 +54,32 @@ export class StorageService {
       return null;
     }
 
-    const uploadedBlob = await this.S3.upload({
+    const command = new PutObjectCommand({
       Bucket: this.BUCKET,
       Key: blobName,
       Body: blob,
-    }).promise();
+    });
 
-    return uploadedBlob;
+    return this.s3Client.send(command);
   }
 
   async getStream(key: string): Promise<Stream> {
-    if (!this.isUp()) {
-      return null;
-    }
-
-    const stream = await this.S3.getObject({
-      Bucket: this.BUCKET,
-      Key: key,
-    }).createReadStream();
-
-    return stream;
+    const response = await this.getObject(key);
+    return response;
   }
 
-  // to get stream you can use file.createReadStream()
-  async putStream(
-    key: string,
-    stream: ReadStream,
-  ): Promise<AWS.S3.PutObjectOutput> {
+  async putStream(key: string, stream: ReadStream): Promise<any> {
     if (!this.isUp()) {
       return null;
     }
 
-    const file = await new Promise<AWS.S3.PutObjectOutput>(
-      (resolve, reject) => {
-        const handleError = (error: any) => {
-          reject(error);
-        };
-        const chunks: Buffer[] = [];
+    const chunks: Buffer[] = [];
+    for await (const chunk of stream) {
+      chunks.push(chunk);
+    }
 
-        stream.on('data', (chunk: Buffer) => {
-          chunks.push(chunk);
-        });
-
-        stream.once('end', async () => {
-          const fileBuffer = Buffer.concat(chunks);
-
-          try {
-            const uploaded = await this.putObject(key, fileBuffer);
-
-            resolve(uploaded);
-          } catch (error) {
-            handleError(new InternalServerErrorException(error));
-          }
-        });
-
-        stream.on('error', (error) =>
-          handleError(new InternalServerErrorException(error)),
-        );
-      },
-    );
-
-    return file;
+    const fileBuffer = Buffer.concat(chunks);
+    return this.putObject(key, fileBuffer);
   }
 
   private async createBucket() {
@@ -121,96 +87,67 @@ export class StorageService {
       return null;
     }
 
-    const res = await this.S3.listBuckets().promise();
+    const command = new ListBucketsCommand({});
+    const response = await this.s3Client.send(command);
+    const bucketExists = response.Buckets?.some((b) => b.Name === this.BUCKET);
 
-    if (res) {
-      const bucket = res.Buckets.find((b) => b.Name === this.BUCKET);
-
-      if (!bucket) {
-        console.log(`Creating bucket ${this.BUCKET}`);
-        return this.S3.createBucket({ Bucket: this.BUCKET }).promise();
-      }
+    if (!bucketExists) {
+      console.log(`Creating bucket ${this.BUCKET}`);
+      const createBucketCommand = new CreateBucketCommand({ Bucket: this.BUCKET });
+      return this.s3Client.send(createBucketCommand);
     }
+  }
+
+  async renameFile(oldPath: string, newPath: string): Promise<void> {
+    await this.s3Client.send(
+      new CopyObjectCommand({
+        Bucket: this.BUCKET,
+        CopySource: `${this.BUCKET}/${this.ROOT_PATH}${oldPath}`,
+        Key: `${this.ROOT_PATH}${newPath}`,
+      })
+    );
+
+    await this.s3Client.send(
+      new DeleteObjectCommand({
+        Bucket: this.BUCKET,
+        Key: `${this.ROOT_PATH}${oldPath}`,
+      })
+    );
+  }
+
+  getRandomKey(): string {
+    return randomBytes(32).toString('hex');
   }
 
   uploadFiles(files: Express.Multer.File[], getFilepath?: (file: Express.Multer.File) => string): Promise<any[]> {
     return Promise.all(
       files.map(async (file) => {
         if (file.mimetype === 'application/file-reference') {
-
-          const json = JSON.parse(file.buffer.toString());
-
-          return json;
+          return JSON.parse(file.buffer.toString());
         }
 
-        const filepath = this.ROOT_PATH + (getFilepath(file) ||
-          (
-            'unnamed/' +
-            require('crypto').randomBytes(32).toString('hex') +
-            '.' +
-            file.originalname.split('.').pop()
-          )
-        );
-
+        const filepath = `${this.ROOT_PATH}${getFilepath ? getFilepath(file) : `${this.UNNAMED_ROOT_PATH}${this.getRandomKey()}.${file.originalname.split('.').pop()}`}`;
         await this.putObject(filepath, file.buffer);
-
         return {
           name: file.originalname,
           path: filepath,
           type: file.mimetype,
           size: file.size,
-        } as unknown; // as FileReference;
+        };
       }),
     );
   }
 
   async uploadFile(file: Express.Multer.File, filepath?: string): Promise<any> {
-
-    if (file.mimetype === 'application/file-reference') {
-
-      const json = JSON.parse(file.buffer.toString());
-
-      return json;
-    }
-
-    if (!filepath) {
-      filepath =
-        this.ROOT_PATH +
-        'unnamed/' +
-        require('crypto').randomBytes(32).toString('hex') +
-        '.' +
-        file.originalname.split('.').pop();
-    } else {
-      filepath = this.ROOT_PATH + filepath;
-    }
-
+    filepath = filepath
+      ? `${this.ROOT_PATH}${filepath}`
+      : `${this.ROOT_PATH}${this.UNNAMED_ROOT_PATH}${this.getRandomKey()}.${file.originalname.split('.').pop()}`;
     await this.putObject(filepath, file.buffer);
-
     return {
       name: file.originalname,
       path: filepath,
       type: file.mimetype,
       size: file.size,
     };
-  }
-
-  async renameFile(oldPath: string, newPath: string) {
-    console.log('[x] bucket=', this.BUCKET, ', oldPath=', this.BUCKET + '/' + this.ROOT_PATH + oldPath, ', newPath=', newPath);
-
-    await this.S3.copyObject({
-      Bucket: this.BUCKET,
-      CopySource: this.BUCKET + '/' + this.ROOT_PATH + oldPath,
-      Key: this.ROOT_PATH + newPath,
-    }).promise();
-
-    // delete old file
-    await this.S3.deleteObject({
-      Bucket: this.BUCKET,
-      Key: this.ROOT_PATH + oldPath,
-    }).promise();
-  }
-
-  getRandomKey() {
-    return require('crypto').randomBytes(32).toString('hex');
   }
 }
