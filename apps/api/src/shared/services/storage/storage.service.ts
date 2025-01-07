@@ -5,7 +5,7 @@ import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { ConfigService } from '../../../config/config.service';
 import { Stream } from 'stream';
 import { Prisma } from '@prisma/client';
-import { FileReference } from 'file-reference';
+import { FileReference } from '@sandumo/file-reference';
 
 @Injectable()
 export class StorageService {
@@ -13,21 +13,22 @@ export class StorageService {
   private BUCKET: string;
 
   constructor(private configService: ConfigService) {
-    try {
-      this.S3 = new AWS.S3({
-        accessKeyId: this.configService.getS3AccessKeyId(),
-        secretAccessKey: this.configService.getS3SecretAccessKey(),
-        endpoint: this.configService.getS3Endpoint(),
-        s3ForcePathStyle: true,
-        signatureVersion: 'v4',
-        sslEnabled: false,
-        correctClockSkew: true,
-      });
-      this.BUCKET = this.configService.getS3Bucket();
-      this.createBucket();
-    } catch (error) {
-      console.error(error);
-    }
+    // console.log('[x] epta here');
+    // try {
+    //   this.S3 = new AWS.S3({
+    //     accessKeyId: this.configService.getS3AccessKeyId(),
+    //     secretAccessKey: this.configService.getS3SecretAccessKey(),
+    //     endpoint: this.configService.getS3Endpoint(),
+    //     s3ForcePathStyle: true,
+    //     signatureVersion: 'v4',
+    //     sslEnabled: false,
+    //     correctClockSkew: true,
+    //   });
+    //   this.BUCKET = this.configService.getS3Bucket();
+    //   this.createBucket();
+    // } catch (error) {
+    //   console.error(error);
+    // }
   }
 
   private isUp() {

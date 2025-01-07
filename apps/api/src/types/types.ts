@@ -1,4 +1,4 @@
-import { FileReference } from 'file-reference';
+import { FileReference } from '@sandumo/file-reference';
 // export {};
 
 // declare global {

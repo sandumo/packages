@@ -41,12 +41,12 @@ async function bootstrap() {
 
     const document = SwaggerModule.createDocument(app, config);
 
-    new OpenAPIClientGenerator()
-      .fromSchema(document)
-      .toPath(
-        path.join(__dirname + '../../../../packages/api-client/src/index.ts'),
-      )
-      .generate();
+    // new OpenAPIClientGenerator()
+    //   .fromSchema(document)
+    //   .toPath(
+    //     path.join(__dirname + '../../../../packages/api-client/src/index.ts'),
+    //   )
+    //   .generate();
 
     SwaggerModule.setup('api', app, document);
   }

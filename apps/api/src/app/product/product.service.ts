@@ -1,5 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { PrismaService, StorageService } from 'src/shared/services';
+import { PrismaService } from 'src/shared/services';
+import { StorageService } from '@sandumo/nestjs-storage-module';
 import {
   Brand,
   CreateProductDto,
