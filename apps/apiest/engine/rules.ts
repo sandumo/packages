@@ -10,6 +10,18 @@ export const rules = {
 };
 
 export function parsePermission(permission: string) {
+  return {
+    actions: [],
+    excludeActions: false,
+    resources: [],
+    excludeResources: false,
+    fields: [],
+    excludeFields: false,
+    conditions: [],
+    excludeConditions: false,
+    specials: [],
+  };
+
   const match = permission.match(
     /^(\!)?\[?([a-z\*,]+)\]?\.(\!)?\[?([_a-zA-Z0-9\*,]+)\]?(\.(\!)?\[?([_a-zA-Z0-9\*,]+)\]?(\.?(\!)?\[?([^\]]+)\]?)?)?$/,
   );

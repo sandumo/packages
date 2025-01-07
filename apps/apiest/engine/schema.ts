@@ -13,8 +13,8 @@ import {
 import { camelCaseToKebabCase } from './utils';
 
 export type InputModel = {
-  name: string;
   plural?: string;
+  flags?: string;
   conditions?: Record<string, QueryFilter>;
   fields: Record<string, string>;
 };
@@ -23,14 +23,14 @@ export type InputSchema = {
   resources: {
     [key: string]: InputModel;
   };
+  permissions: Record<string, string[]>;
 };
 
 export const inputSchema: InputSchema = {
   resources: {
     product: {
-      name: 'Product',
       fields: {
-        id: 'integer PK identifiable',
+        id: 'integer PK identifiable', // /products/1
         category: 'string filterable sortable searchable',
         name: 'string translatable',
         price: 'float',
@@ -42,7 +42,6 @@ export const inputSchema: InputSchema = {
     },
 
     category: {
-      name: 'Category',
       plural: 'categories',
       fields: {
         id: 'integer PK sortable',
@@ -51,27 +50,30 @@ export const inputSchema: InputSchema = {
     },
 
     post: {
-      name: 'Post',
-      // plural: 'posts',
-      // flags: 'own', // own meanse that the records belongs to the user
-      // defaultAccess: 'private',
-      // flags: 'ownable',
+      flags: 'ownable',
       fields: {
         id: 'integer PK identifiable',
         title: 'string translatable',
         content: 'string translatable nullable',
-        // published: 'boolean default(false)',
-        // views: 'integer default(0)',
         comments: 'ref(comment) iterable',
         moderated: 'boolean default(false)',
         status: 'string default("draft")',
-        // moderator: 'ref(user) nullable',
         // likes: 'ref(postLike) iterable countable',
-        // owner: 'ref(user.id) nullable',
-        // ownerId: 'integer nullable',
         hash: 'string identifiable nullable',
-        owner: 'ref(user.id) nullable',
         author: 'ref(user.id) nullable',
+        // hideStatus: 'boolean default(false)',
+      },
+      conditions: {
+        sentToModeration: {
+          field: 'status',
+          operator: 'eq',
+          value: 'sent_to_moderation',
+        },
+        published: {
+          field: 'status',
+          operator: 'eq',
+          value: 'published',
+        },
       },
     },
 
@@ -85,8 +87,6 @@ export const inputSchema: InputSchema = {
     // },
 
     comment: {
-      name: 'Comment',
-      // plural: 'comments',
       fields: {
         id: 'integer PK',
         content: 'string translatable',
@@ -96,7 +96,6 @@ export const inputSchema: InputSchema = {
 
     // User
     user: {
-      name: 'User',
       fields: {
         id: 'integer PK',
         email: 'string',
@@ -107,24 +106,23 @@ export const inputSchema: InputSchema = {
         displayName: 'string nullable',
         avatar: 'file nullable',
         permissions: 'string iterable',
-        role: 'ref(role.id) nullable',
+        // role: 'ref(role.id) nullable',
       },
     },
 
-    role: {
-      name: 'Role',
-      fields: {
-        id: 'integer PK',
-        name: 'string',
-      },
-    },
+    // role: {
+    //   name: 'Role',
+    //   fields: {
+    //     id: 'integer PK',
+    //     name: 'string',
+    //   },
+    // },
 
     // Language: https://chatgpt.com/share/e/6743889a-f720-800a-ad5c-dcb08b5f8b7a
     language: {
-      name: 'Language',
       fields: {
         id: 'integer PK identifiable',
-        locale: 'string',
+        locale: 'string unique',
         name: 'string',
         nativeName: 'string',
         direction: 'string default("LTR")',
@@ -132,6 +130,24 @@ export const inputSchema: InputSchema = {
         fallback: 'ref(language.id) nullable',
       },
     },
+  },
+  permissions: {
+    root: ['read.product'], // root user
+    admin: ['*.post'], // not sure if needed
+    owner: [
+      // '*.post',
+      'list.post',
+      'list.post.[id,title,content,author.[id,displayName],comments.[id,content]]',
+      'read.post.[*,author.[id,displayName]]',
+      // 'read.user',
+      // 'list.post.author',
+      // 'list.post.comments.[id,content]',
+      // 'list.post.owner',
+      // 'list.user.[id,email]',
+    ], // owner of the resource
+    user: [], // authenticated user
+    guest: ['read.post.![status]:status(published)'], // unauthenticated user
+    anyone: [],
   },
 };
 
@@ -142,15 +158,23 @@ export const inputSchema: InputSchema = {
  */
 function transform(schema: InputSchema): Schema {
   return {
+    // resources
     resources: Object.entries(schema.resources).reduce((acc, [key, model]) => {
       const singular = firstLetterToLowerCase(key);
       const plural = firstLetterToLowerCase(model.plural || `${singular}s`);
 
+      const ownable = model.flags?.includes('ownable') || false;
+
+      const fields = model.fields;
+
+      if (ownable) {
+        fields.owner = 'ref(user.id)';
+      }
+
       return {
         ...acc,
         [key]: {
-          name: model.name,
-          // plural: model.plural,
+          name: singular,
           naming: {
             camelCase: singular,
             camelCasePlural: plural,
@@ -217,13 +241,28 @@ function transform(schema: InputSchema): Schema {
             },
             {},
           ),
+
+          // conditions
           conditions: model.conditions,
+
+          // primaryKey
           primaryKey: Object.entries(model.fields).find(([, value]) =>
             value.includes('PK'),
           )?.[0],
+
+          // ownable
+          ownable: model.flags?.includes('ownable') || false,
+
+          // translatable
+          translatable: Object.values(model.fields).some((field) =>
+            field.includes('translatable'),
+          ),
         } as Resource,
       };
     }, {}),
+
+    // permissions
+    permissions: schema.permissions,
   } as Schema;
 }
 

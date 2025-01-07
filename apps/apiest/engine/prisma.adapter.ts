@@ -1,122 +1,63 @@
 import { NestedObject } from './permissions';
-import { filterPermissions, getAllowedAttributes } from './rules';
-import { Language, Permission, Resource, Schema } from './types';
+import { Tree } from './tree';
+import { Language, Query, QueryFilter, Resource, Schema } from './types';
 
-/*
-{
-  select: {
-    id: true,
-    status: true,
-
-    -------------------------------
-
-    comments: true,
-
-    OR
-
-    comments: {
-      select: {
-        id: true,
-        content: true,
-      },
-    },
-
-    -------------------------------
-
-    translations: {
-    }
-  },
-}
-
-
-*/
-
-export class Shit {
+export class PrismaAdapter {
   private schema: Schema;
   private language: Language;
-  private tree: NestedObject;
+  private query: Query;
 
-  constructor(schema: Schema, language: Language, tree: NestedObject) {
+  // private client: PrismaClient;
+
+  constructor(
+    schema: Schema,
+    language: Language,
+    query: Query,
+    // client: PrismaClient,
+  ) {
     this.schema = schema;
     this.language = language;
-    this.tree = tree;
+    this.query = query;
+    // this.client = client;
   }
 
-  doTheShit(resource: Resource, include: string[]) {
-    return this.shit(resource.naming.camelCase, include, this.tree);
+  // static create(schema: Schema, language: Language, query: Query) {
+  //   return new PrismaAdapter(schema, language, query);
+  // }
+
+  getSelect(resource: Resource, tree: NestedObject) {
+    if (!tree || Object.keys(tree).length === 0) {
+      return {};
+    }
+
+    if (resource.ownable) {
+      return this.getSelectRecursive(
+        resource.name,
+        Tree.merge(tree, { owner: { id: true } }),
+      );
+    }
+
+    return this.getSelectRecursive(resource.name, tree);
   }
 
   /**
    * Preprocess the query to include only allowed attributes + translations if needed
    */
-  shit(resourceKey: string, include: string[], tree: NestedObject) {
-    const resource = this.schema.resources[resourceKey];
-
-    const allowedAttributes = Object.keys(tree).filter((key) => tree[key]);
-
-    console.log('[x] allowedAttributes=', allowedAttributes);
-
-    if (allowedAttributes.length === 0) {
-      return false;
+  private getSelectRecursive(resourceName: string, tree: NestedObject) {
+    if (!tree || Object.keys(tree).length === 0) {
+      return {};
     }
 
-    const includeMap = include.reduce((acc, attr) => {
-      const parts = attr.split('.');
-      const key = parts.shift();
-      const rest = parts.join('.');
-
-      if (parts.length === 0) {
-        acc[key] = true;
-      } else if (!(key in acc)) {
-        acc[key] = [rest];
-      } else {
-        acc[key].push(rest);
-      }
-
-      return acc;
-    }, {});
-
-    const epta = allowedAttributes.reduce((acc, attr) => {
-      if (!resource.fields[attr]) {
-        console.log('[x] attr=', resource.naming.camelCase, attr);
-      }
-
-      if (resource.fields[attr].translatable) {
-        return acc;
-      }
-
-      if (resource.fields[attr].ref) {
-        if (attr in includeMap) {
-          return {
-            ...acc,
-            [attr]: this.shit(
-              resource.fields[attr].ref.resource,
-              includeMap[attr] === true ? [] : includeMap[attr],
-              typeof tree[attr] === 'boolean'
-                ? {}
-                : (tree[attr] as NestedObject),
-            ),
-          };
-        }
-
-        return acc;
-      }
-
-      return { ...acc, [attr]: true };
-    }, {});
-
-    const translatable = Object.values(resource.fields).some(
-      (field) => field.translatable && allowedAttributes.includes(field.name),
-    );
+    const resource = this.schema.resources[resourceName];
 
     let translations = {};
 
-    if (translatable) {
+    if (resource.translatable) {
       translations = {
         translations: {
           select: {
             languageId: true,
-            ...allowedAttributes
+            ...Object.keys(tree || {})
               .filter((attr) => resource.fields[attr].translatable)
               .reduce(
                 (acc, attr) => ({
@@ -145,16 +86,64 @@ export class Shit {
 
     return {
       select: {
-        ...epta,
+        ...Object.keys(tree || {}).reduce((acc, key) => {
+          if (resource.fields[key].translatable) {
+            return acc;
+          }
+
+          if (resource.fields[key].ref) {
+            acc[key] = this.getSelectRecursive(
+              resource.fields[key].ref.resource,
+              tree[key] as NestedObject,
+            );
+
+            return acc;
+          }
+
+          if (tree[key]) {
+            acc[key] = true;
+          }
+
+          return acc;
+        }, {}),
         ...translations,
       },
     };
   }
 
-  /**
-   * Postprocess the data to include translations and references
-   */
-  postprocess(resource: Resource, data: any) {
+  getFilter(filter: QueryFilter) {
+    return this.getFilterRecursive(filter);
+  }
+
+  private getFilterRecursive(filter: QueryFilter) {
+    if (!filter) {
+      return {};
+    }
+
+    if ('or' in filter) {
+      return {
+        OR: filter.or.map((f) => this.getFilterRecursive(f)).filter(Boolean),
+      };
+    }
+
+    if ('and' in filter) {
+      return {
+        AND: filter.and.map((f) => this.getFilterRecursive(f)).filter(Boolean),
+      };
+    }
+
+    if (filter.operator === 'eq') {
+      return { [filter.field]: filter.value };
+    }
+
+    if (!filter.operator) {
+      return {};
+    }
+
+    return null;
+  }
+
+  postProcessRecursive(resource: Resource, data: any) {
     return Object.values(resource.fields).reduce((acc, field) => {
       if (field.translatable) {
         const translation = data.translations.find(
@@ -194,14 +183,17 @@ export class Shit {
           return {
             ...acc,
             [field.name]: data[field.name].map((item: any) =>
-              this.postprocess(this.schema.resources[field.ref.resource], item),
+              this.postProcessRecursive(
+                this.schema.resources[field.ref.resource],
+                item,
+              ),
             ),
           };
         }
 
         return {
           ...acc,
-          [field.name]: this.postprocess(
+          [field.name]: this.postProcessRecursive(
             this.schema.resources[field.ref.resource],
             data[field.name],
           ),

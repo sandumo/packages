@@ -47,10 +47,10 @@ model Post {
   moderated Boolean @default(false)
   status String @default("draft")
   hash String?
-  owner User? @relation("owner", fields: [ownerId], references: [id])
-  ownerId Int?
   author User? @relation("author", fields: [authorId], references: [id])
   authorId Int?
+  owner User @relation("owner", fields: [ownerId], references: [id])
+  ownerId Int
   translations PostTranslation[]
   createdAt DateTime? @default(now())
   updatedAt DateTime? @default(now()) @updatedAt
@@ -96,8 +96,8 @@ model User {
   displayName String?
   avatar Json?
   permissions String[]
-  postOwner Post[] @relation("owner")
   postAuthor Post[] @relation("author")
+  postOwner Post[] @relation("owner")
   createdAt DateTime? @default(now())
   updatedAt DateTime? @default(now()) @updatedAt
   deletedAt DateTime?
@@ -105,7 +105,7 @@ model User {
 
 model Language {
   id Int @id @default(autoincrement())
-  locale String
+  locale String @unique
   name String
   nativeName String
   direction String @default("LTR")

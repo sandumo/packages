@@ -1,6 +1,7 @@
-import { Resource, Schema } from './types';
+import { QueryFilter, Resource, Schema } from './types';
+import { isObject } from './utils';
 
-type BaseAction = 'read' | 'create' | 'update' | 'delete';
+export type BaseAction = 'read' | 'list' | 'create' | 'update' | 'delete';
 
 type RecField = {
   except?: boolean;
@@ -9,10 +10,23 @@ type RecField = {
   };
 };
 
-type NestedObject = {
+export type NestedObject = {
   [key: string]: boolean | NestedObject;
 };
 
+/**
+ * How it works:
+ * - build permission tree
+ *   - filter permissions by action
+ *   - parse each permission into a nested object
+ *   - merge all nested objects into a single tree
+ * - build requested tree
+ *   - build relational tree (includes)
+ *   - build the requested tree based on schema and relational tree
+ * - build the final tree
+ *   - recursively intersect permission tree with requested tree
+ *     - merge relational permissions with related resource permissions
+ */
 export class PermissionParser {
   private schema: Schema;
   private permissions: string[];
@@ -25,78 +39,79 @@ export class PermissionParser {
     this.permissions = permissions;
   }
 
-  tree(action: BaseAction, resource: Resource, include: string[]) {
-    const permissionTree = this.getPermissionTree();
+  toPrismaSelect(attributes: NestedObject) {
+    return Object.keys(attributes).reduce((acc, attribute) => {
+      if (typeof attributes[attribute] === 'boolean') {
+        if (attributes[attribute]) {
+          acc[attribute] = true;
+        }
+      } else {
+        acc[attribute] = {
+          select: attributes[attribute],
+        };
+      }
 
-    // permissionTree = this.postprocessPermissionTree(permissionTree);
+      return acc;
+    }, {});
+  }
 
-    this.permissionTree = permissionTree;
-    console.log('[x] permissionTree=', permissionTree);
+  tree(
+    action: BaseAction,
+    resource: Resource,
+    include: string[] | null,
+    permissions: string[],
+    data?: any,
+  ) {
+    // console.log('[x] action=', action);
 
-    // const permissions = this.filterPermissions(
-    //   this.permissions,
-    //   action,
-    //   resource,
-    // );
+    // const conditions = this.getConditions(resource, this.permissions);
 
-    // const parsedPermissions = permissions.map((permission) =>
-    //   this.parse(permission),
-    // );
+    // console.log('[x] conditions=', conditions);
 
-    // console.log(
-    //   '[x] parsedPermissions=',
-    //   parsedPermissions, //.map((p) => p.attributes),
-    // );
+    // build permission tree
+    permissions = this.filterPermissions(permissions, action);
+    this.permissionTree = this.getPermissionTree(permissions);
 
-    const includeTree = this.getIncludeTree(include);
+    // console.log('[x] permissionTree=', this.permissionTree);
 
+    // build relational tree
+    let includeTree = {};
+
+    if (include) {
+      includeTree = this.getIncludeTree(include);
+    } else if (data) {
+      includeTree = this.getIncludeTreeFromData(data);
+
+      console.log('[x] includeTree=', includeTree);
+    }
+
+    // build requested tree
     const requestedTree = this.getRequestedTree(resource, includeTree);
 
-    console.log('[x] requestedTree=', requestedTree);
-
-    // const tr = {};
-
-    // const tree = this.getAllowedTree(resource, parsedPermissions, includeTree);
-
-    // const tree = this.intersection(permissionTree, {
-    //   [resource.naming.camelCase]: requestedTree,
-    // });
-
+    // build the final tree
     const tree = this.getTree(
       {
         [resource.naming.camelCase]: requestedTree,
       },
-      permissionTree,
+      this.permissionTree,
     );
 
-    console.log('[x] tree=', (tree as any).post);
+    return tree[resource.naming.camelCase];
+  }
 
-    // const resourceAttributes =
+  private getIncludeTreeFromData(data: any) {
+    let flag = false;
 
-    // parsedPermissions.forEach((parsedPermission) => {
-    //   if (parsedPermission.attributes.except) {
-    //     return Object.keys(resource.fields).forEach((field) => {
-    //       if (!parsedPermission.attributes.attributes[field]) {
-    //         if (tr[field]) {
-    //           tr[field] = this.combine(
-    //             tr[field],
-    //             parsedPermission.attributes.attributes[field],
-    //           );
-    //         } else {
-    //           tr[field] = parsedPermission.attributes.attributes[field];
-    //         }
-    //       }
-    //     });
-    //   }
+    const object = Object.keys(data).reduce((acc, key) => {
+      if (isObject(data[key])) {
+        acc[key] = this.getIncludeTreeFromData(data[key]);
+        flag = true;
+      }
 
-    //   Object.keys(parsedPermission.attributes.attributes).forEach((field) => {
-    //     if (resource.fields[field]) {
-    //       tr[field] = parsedPermission.attributes.attributes[field];
-    //     }
-    //   });
-    // });
+      return acc;
+    }, {});
 
-    // return tree;
+    return flag ? object : true;
   }
 
   private getTree(
@@ -104,10 +119,7 @@ export class PermissionParser {
     permissionTree: NestedObject,
     path?: string,
   ) {
-    // console.log('[x] path=', path, requestedTree, permissionTree);
-
     return Object.keys(requestedTree).reduce((acc, key) => {
-      // console.log('[x] key=', key);
       if (typeof requestedTree[key] === 'boolean') {
         if (typeof permissionTree[key] === 'boolean') {
           acc[key] = requestedTree[key] && permissionTree[key];
@@ -138,8 +150,8 @@ export class PermissionParser {
           const resource = this.getResourceByPath(newPath);
 
           const pTree = this.permissionTree[resource.naming.camelCase] || {};
-          // console.log('[x] pathe=', newPath, pTree);
 
+          // console.log('[x] pTree', pTree);
           acc[key] = this.getTree(
             requestedTree[key] as NestedObject,
             this.mergeTwo(
@@ -159,7 +171,6 @@ export class PermissionParser {
             newPath,
           );
         }
-        // acc[key] = true;
       }
 
       return acc;
@@ -174,25 +185,18 @@ export class PermissionParser {
     }, this.schema.resources[parts[0]]);
   }
 
-  private getPermissionTree() {
-    const permissions = this.filterPermissions(this.permissions, 'read');
+  private getPermissionTree(permissions: string[]) {
+    return permissions.reduce((acc, permission) => {
+      const p = this.parsePermission(
+        permission.split(':').shift().split('.').slice(1).join('.'),
+      );
 
-    // const permissionTree: NestedObject = {};
-
-    const permissionTree = permissions.reduce((acc, permission) => {
-      const p = this.parsePermission(permission.split('.').slice(1).join('.'));
+      // console.log('[x] p=', p);
 
       acc = this.mergeTwo(acc, p);
 
-      // const p = this.parsePermission(permission.split('.').slice(1).join('.'));
-
-      // console.log('[x] permission=', p);
       return acc;
     }, {});
-
-    // console.log('[x] permissionTree1=', permissionTree);
-
-    return permissionTree;
   }
 
   /**
@@ -200,8 +204,6 @@ export class PermissionParser {
    * { post: { title: true, content: true, author: { displayName: true } } }
    */
   private parsePermission(fieldPart: string, resourceName?: string) {
-    // console.log('[x] fieldPart=', fieldPart, resourceName);
-
     // If * then return all resources with all non-relational fields
     if (fieldPart === '*') {
       return Object.values(this.schema.resources).reduce((acc, resource) => {
@@ -221,6 +223,7 @@ export class PermissionParser {
     }
 
     // If the fieldPart is a resource name, return all fields of the resource
+    // TODO: maybe need to remove
     if (this.schema.resources[fieldPart]) {
       return {
         [fieldPart]: Object.values(
@@ -245,37 +248,35 @@ export class PermissionParser {
       fieldPart = fieldPart.slice(1, -1);
     }
 
+    let resource: Resource;
+    if (resourceName) {
+      resource = this.schema.resources[resourceName];
+    }
+
     let result: NestedObject = {};
 
     let existingAttributes: Record<string, any>;
 
-    if (resourceName) {
-      existingAttributes = this.schema.resources[resourceName].fields;
+    if (resource) {
+      existingAttributes = resource.fields;
     } else {
       existingAttributes = this.schema.resources;
     }
 
     if (resourceName && except) {
-      result = Object.keys(this.schema.resources[resourceName].fields).reduce(
-        (acc, field) => ({
-          ...acc,
-          [field]: true,
-        }),
-        {},
-      );
+      result = Object.values(resource.fields).reduce((acc, field) => {
+        if (!field.ref) {
+          acc[field.name] = true;
+        }
+
+        return acc;
+      }, {});
     }
 
-    let frontSequence: string = '';
-    let backSequence: string = '';
     let i = 0;
-    let j = fieldPart.length - 1;
-
-    // console.log('[x] fieldPart=', fieldPart, resourceName);
 
     const addAttribute = (result: NestedObject, key: string) => {
-      // console.log('[x] foo=', key);
       if (key === '*') {
-        // console.log('[x] gothere=', key);
         result = {
           ...result,
           ...this.getResourceTree(this.schema.resources[resourceName]),
@@ -301,79 +302,128 @@ export class PermissionParser {
       return result;
     };
 
-    while (i < j) {
-      // frontSequence
-      if (fieldPart[i] !== '[') {
-        if (fieldPart[i] === ',') {
-          result = addAttribute(result, frontSequence);
-          frontSequence = '';
-        } else {
-          frontSequence += fieldPart[i];
+    let sequence: string = '';
+
+    const findClosingBracket = (str: string, start: number) => {
+      let bracketCount = 1;
+      let j = start;
+
+      for (; j < str.length; j++) {
+        if (fieldPart[j] === ']') {
+          bracketCount--;
+        } else if (fieldPart[j] === '[') {
+          bracketCount++;
         }
 
+        if (bracketCount === 0) {
+          break;
+        }
+      }
+
+      return j;
+    };
+
+    const findEnding = (str: string, start: number) => {
+      let bracketCount = 0;
+      let i = start;
+
+      for (; i < str.length; i++) {
+        if (str[i] === ']') {
+          bracketCount--;
+        } else if (str[i] === '[') {
+          bracketCount++;
+        } else if (str[i] === ',' && bracketCount === 0) {
+          break;
+        }
+      }
+
+      return i;
+    };
+
+    // console.log('[x] fieldPart', resourceName, fieldPart);
+
+    while (i < fieldPart.length) {
+      // handle: <segment>,
+      if (fieldPart[i] === ',') {
+        result = addAttribute(result, sequence);
+        sequence = '';
         i++;
       }
+      // handle: <segment>.
+      else if (fieldPart[i] === '.') {
+        // handle: .!
+        if (fieldPart[i + 1] === '!') {
+          // handle: <segment>.![
+          if (fieldPart[i + 2] === '[') {
+            // let bracketCount = 1;
+            const j = findClosingBracket(fieldPart, i + 3);
 
-      // backSequence
-      if (fieldPart[j] !== ']') {
-        if (fieldPart[j] === ',') {
-          result = addAttribute(result, backSequence);
-          backSequence = '';
-        } else {
-          backSequence = fieldPart[j] + backSequence;
-        }
-
-        j--;
-      }
-
-      // nested object
-      if (
-        (fieldPart[i] === '[' || fieldPart[i] === '!') &&
-        fieldPart[j] === ']'
-      ) {
-        frontSequence = frontSequence.slice(0, -1);
-
-        if (existingAttributes[frontSequence]) {
-          if (resourceName) {
-            const resource =
-              this.schema.resources[resourceName].fields[frontSequence].ref
-                .resource;
-
-            result[frontSequence] = this.parsePermission(
-              fieldPart.slice(i, j + 1),
-              resource,
+            result[sequence] = this.parsePermission(
+              fieldPart.slice(i + 1, j + 1),
+              resource ? resource.fields[sequence].ref.resource : sequence,
             );
-          } else {
-            result[frontSequence] = this.parsePermission(
-              fieldPart.slice(i, j + 1),
-              frontSequence,
-            );
+
+            sequence = '';
+
+            i = j;
+          }
+          // handle: .!<segment>
+          else {
+            const j = fieldPart.slice(i + 3).indexOf(',');
+
+            if (j !== -1) {
+              result[sequence] = this.parsePermission(
+                fieldPart.slice(i + 1, j + 1),
+                resource ? resource.fields[sequence].ref.resource : sequence,
+              );
+
+              i = j;
+            } else {
+              result = addAttribute(result, sequence);
+            }
+
+            sequence = '';
+            i = fieldPart.length;
           }
         }
+        // handle: <segment>.[
+        else if (fieldPart[i + 1] === '[') {
+          const j = findClosingBracket(fieldPart, i + 2);
 
-        frontSequence = '';
+          if (existingAttributes[sequence]) {
+            result[sequence] = this.parsePermission(
+              fieldPart.slice(i + 1, j + 1),
+              resource ? resource.fields[sequence].ref.resource : sequence,
+            );
+          }
 
-        break;
+          sequence = '';
+
+          i = j;
+        }
+        // handle: <segment>.<segment>
+        else {
+          const j = findEnding(fieldPart, i + 1);
+
+          result[sequence] = this.parsePermission(
+            fieldPart.slice(i + 1, j + 1),
+            resource ? resource.fields[sequence].ref.resource : sequence,
+          );
+
+          sequence = '';
+
+          i = j;
+        }
+      }
+      // handle: <segment>
+      else {
+        sequence += fieldPart[i];
+        i++;
       }
     }
 
-    if (frontSequence || backSequence) {
-      const keys = [];
-
-      if (i === j) {
-        if (fieldPart[i] === ',') {
-          keys.push(frontSequence);
-          keys.push(backSequence);
-        } else {
-          keys.push(frontSequence + fieldPart[i] + backSequence);
-        }
-      } else {
-        keys.push(frontSequence + backSequence);
-      }
-
-      keys.forEach((key) => {
-        result = addAttribute(result, key);
-      });
+    if (sequence) {
+      result = addAttribute(result, sequence);
     }
 
     return result;
@@ -389,36 +439,50 @@ export class PermissionParser {
     }, {});
   }
 
-  // private postprocessPermissionTree(
-  //   tree: NestedObject | boolean,
-  //   resourceName?: string,
-  // ) {
-  //   if (tree === true) {
-  //     return true;
-  //   }
+  getConditionsFilter(
+    action: BaseAction,
+    resource: Resource,
+    permissions: string[],
+  ) {
+    // console.log('[x] permissions', permissions);
 
-  //   // console.log('[x] resource=', resource.naming.camelCase);
+    permissions = this.filterPermissions(this.permissions, action, resource);
 
-  //   return Object.keys(tree).reduce((acc, key) => {
-  //     console.log('[x] key=', key);
+    const conditions: string[][] = [];
 
-  //     if (!resourceName) {
-  //       acc[key] = this.postprocessPermissionTree(tree[key], key);
-  //     } else {
-  //       const resource = this.schema.resources[resourceName];
-  //       if (resource.fields[key].ref) {
-  //         acc[key] = this.postprocessPermissionTree(
-  //           tree[key],
-  //           resource.fields[key].ref.resource,
-  //         );
-  //       } else {
-  //         acc[key] = tree[key];
-  //       }
-  //     }
+    for (const permission of permissions) {
+      const p = permission.split(':')[1];
 
-  //     return acc;
-  //   }, {});
-  // }
+      if (p) {
+        conditions.push(p.split(','));
+      } else {
+        return;
+      }
+    }
+
+    const filter: QueryFilter = { or: [] };
+
+    for (const andConditions of conditions) {
+      const and: QueryFilter = { and: [] };
+
+      for (const condition of andConditions) {
+        const [, field, value] = condition.match(/^([a-zA-Z0-9_]+)\((.*)\)$/);
+
+        and.and.push({ field, operator: 'eq', value });
+      }
+
+      if (and.and.length > 0) {
+        filter.or.push(and);
+      }
+    }
+
+    return filter;
+  }
+
+  private parseConditionPart(part: string) {
+    const [, field, value] = part.match(/^([a-zA-Z0-9_]+)\((.*)\)$/);
+    return { field, operator: 'eq', value };
+  }
 
   private intersection(
     obj1: NestedObject,
@@ -559,7 +623,7 @@ export class PermissionParser {
     return tree;
   }
 
-  private mergeTwo(a: NestedObject, b: NestedObject): NestedObject {
+  mergeTwo(a: NestedObject, b: NestedObject): NestedObject {
     const result: NestedObject = { ...a };
     for (const key in b) {
       if (b.hasOwnProperty(key)) {
@@ -580,7 +644,7 @@ export class PermissionParser {
             );
           } else {
             // Overwrite with b's value if not both objects
-            result[key] = bVal;
+            result[key] = bVal || aVal;
           }
         } else {
           // Add new key from b
@@ -673,7 +737,7 @@ export class PermissionParser {
     return result;
   }
 
-  private filterPermissions(
+  filterPermissions(
     permissions: string[],
     action: BaseAction,
     resource?: Resource,

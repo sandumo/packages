@@ -55,7 +55,6 @@ export type Field = {
 
 export type Resource = {
   name: string;
-  // plural: string;
   conditions?: Record<string, QueryFilter>;
   naming: {
     camelCase: string;
@@ -69,11 +68,20 @@ export type Resource = {
     [key: string]: Field;
   };
   primaryKey: string;
+  ownable: boolean;
+  translatable: boolean;
 };
 
 export type Schema = {
   resources: {
     [key: string]: Resource;
+  };
+  permissions: {
+    root: string[];
+    owner: string[];
+    user: string[];
+    guest: string[];
+    anyone: string[];
   };
 };
 
@@ -123,6 +131,7 @@ export type User = {
   displayName?: string;
   avatar?: string;
   permissions: Permission[];
+  _permissions: string[];
 };
 
 export type Language = {

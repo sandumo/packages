@@ -15,8 +15,8 @@ import {
 } from 'engine/utils';
 import { FIELD_TYPE, Language, QueryFilter, User } from '../engine/types';
 import { StorageService } from '@sandumo/nestjs-storage-module';
-import { combinePermissions, getPrismaMask } from 'engine/rules';
-import { Shit } from 'engine/shit';
+import { combinePermissions } from 'engine/rules';
+import { App } from 'engine';
 
 @Injectable()
 export class AppService {
@@ -25,8 +25,8 @@ export class AppService {
     private readonly storageService: StorageService,
   ) {}
 
-  async getManyTest(user: User, resource: Resource, query: Query) {
-    const language = await this.prismaService.language.findFirst({
+  async getMany(user: User, resource: Resource, query: Query) {
+    const language = (await this.prismaService.language.findFirst({
       where: {
         locale: 'ru',
       },
@@ -37,107 +37,43 @@ export class AppService {
           },
         },
       },
-    });
+    })) as unknown as Language;
 
-    // console.log('[x] languages=', language);
+    const app = new App(schema, resource, user, language, query, 'list', null);
 
-    const shit = new Shit(
-      schema,
-      user.permissions,
-      language as unknown as Language,
-    );
+    const prismaSelect = app.getSelect();
 
-    const r = shit.doTheShit(resource, query.include);
-
-    console.log('[x] r=', r);
-
-    // doTheShit(resource, query.include, user.permissions);
-
-    const result = await this.prismaService.post.findMany({
-      ...r,
-      // select: {
-      //   comments: true,
-      // },
-      // select: {
-      //   id: true,
-      //   comments: {
-      //     select: {
-      //       id: true,
-      //       translations: true,
-      //     },
-      //   },
-      //   translations: {
-      //     select: {
-      //       title: true,
-      //       // content: true,
-      //     },
-      //     where: {
-      //       OR: [
-      //         { languageId: language.id },
-      //         ...(language.fallback
-      //           ? [
-      //               { languageId: language.fallback.id },
-      //               ...(language.fallback.fallback
-      //                 ? [{ languageId: language.fallback.fallback.id }]
-      //                 : []),
-      //             ]
-      //           : []),
-      //       ],
-      //     },
-      //   },
-      // },
-      // where: prismaFilter,
-      // take: query.pageSize || 10,
-      // skip: ((query.page || 1) - 1) * (query.pageSize || 10),
-    });
-
-    console.log('[x] result=', result[0]);
-    const processed = shit.postprocess(resource, result[0]);
-
-    return processed;
-  }
-
-  async getMany(user: User, resource: Resource, query: Query) {
-    const [attributes, permissionFilter] = combinePermissions(
-      user.permissions,
-      resource,
-      'read',
-    );
-
-    const filter: QueryFilter = {
-      and: [query.filter, permissionFilter].filter(Boolean) as QueryFilter[],
-    };
-
-    const castedFilter = castFilter(filter, resource);
-
-    const prismaFilter = transformToPrismaFilter(castedFilter);
-
-    if (attributes.length === 0) {
+    if (!prismaSelect) {
       throw new ForbiddenException();
     }
 
+    const prismaFilter = app.getFilter();
+
     const [result, total] = await Promise.all([
-      await this.prismaService[resource.naming.camelCase].findMany({
-        ...(attributes[0] !== '*' && {
-          select: attributes.reduce(
-            (acc, field) => {
-              acc[field] = true;
-              return acc;
-            },
-            {} as Record<string, boolean>,
-          ),
-        }),
+      this.prismaService[resource.name].findMany({
+        ...prismaSelect,
         where: prismaFilter,
         take: query.pageSize || 10,
         skip: ((query.page || 1) - 1) * (query.pageSize || 10),
       }),
-      await this.prismaService[resource.name.toLowerCase()].count({
+      this.prismaService[resource.name].count({
         where: prismaFilter,
       }),
     ]);
 
+    // {
+    //     id: true,
+    //     status: true,
+    //     translations: {
+    //         title: true,
+    //         content: true,
+    //     }
+    // }
+
+    const processed = app.postProcess(result);
+
     return {
-      data: result,
+      data: processed,
       pagination: {
         page: query.page || 1,
         pageSize: query.pageSize || 10,
@@ -151,42 +87,60 @@ export class AppService {
     user: User,
     resource: Resource,
     identificationFilter: QueryFilter,
+    query: Query,
   ) {
+    const language = (await this.prismaService.language.findFirst({
+      where: {
+        locale: 'en',
+      },
+      include: {
+        fallback: {
+          include: {
+            fallback: true,
+          },
+        },
+      },
+    })) as unknown as Language;
+
+    const app = new App(schema, resource, user, language, query, 'read', null);
+
     // Get the attributes allowed by the permissions
-    const attributes = getPrismaMask(resource, user.permissions);
+    // const attributes = getPrismaMask(resource, user.permissions);
+
+    const prismaSelect = app.getSelect();
+
+    console.log('[x] prismaSelect=', prismaSelect);
 
     // If no attribute is allowed then the user doesn't have permission to this resource
-    if (attributes.length === 0) {
+    if (!prismaSelect) {
       throw new ForbiddenException();
     }
 
+    const prismaFilter = app.getFilter();
+
+    console.log('[x] prismaFilter=', prismaFilter);
+
     // Get the filter produced by the conditions from the permissions
-    const [, permissionFilter] = combinePermissions(
-      user.permissions,
-      resource,
-      'read',
-    );
+    // const [, permissionFilter] = combinePermissions(
+    //   user.permissions,
+    //   resource,
+    //   'read',
+    // );
 
     // Combine the identification filter and the permission filter
-    const filter: QueryFilter = {
-      and: [identificationFilter, permissionFilter].filter(
-        Boolean,
-      ) as QueryFilter[],
+    const filter = {
+      AND: [identificationFilter, prismaFilter].filter(Boolean),
     };
 
     // Run the query
-    return await this.prismaService[resource.naming.camelCase].findFirst({
-      ...(attributes[0] !== '*' && {
-        select: attributes.reduce(
-          (acc, field) => {
-            acc[field] = true;
-            return acc;
-          },
-          {} as Record<string, boolean>,
-        ),
-      }),
-      where: transformToPrismaFilter(castFilter(filter, resource)),
+    const result = await this.prismaService[
+      resource.naming.camelCase
+    ].findFirst({
+      ...prismaSelect,
+      where: filter,
     });
+
+    return app.postProcess(result);
   }
 
   async handleCreate(model: Resource, data: any) {
@@ -280,8 +234,57 @@ export class AppService {
     identificationFilter: QueryFilter,
     data: any,
   ) {
+    const language = (await this.prismaService.language.findFirst({
+      where: {
+        locale: 'ru',
+      },
+      include: {
+        fallback: {
+          include: {
+            fallback: true,
+          },
+        },
+      },
+    })) as unknown as Language;
+
+    const app = new App(schema, resource, user, language, {}, 'update', data);
+
+    app.do();
+
+    await this.prismaService.post.update({
+      where: {
+        id: 2,
+      },
+      data: {
+        status: 'published',
+        translations: {
+          upsert: {
+            where: {
+              postId_languageId: {
+                postId: 2,
+                languageId: 2,
+              },
+            },
+            update: {
+              title: 'New Post Title RO: test',
+              content: 'New Post Content RO: test',
+            },
+            create: {
+              title: 'New Post Title RO: test',
+              content: 'New Post Content RO: test',
+              languageId: 2,
+            },
+          },
+        },
+      },
+    });
+
     // Raw data
     console.log('[x] data=', data);
+
+    const include = app.getIncludeFromData(data);
+
+    console.log('[x] include=', include);
 
     const cleanedData = cleanData(resource, data, user.permissions);
 
@@ -303,7 +306,7 @@ export class AppService {
 
     console.log('[x] validationResult=', validationResult);
 
-    // return {};
+    return {};
 
     if (!validationResult.success) {
       throw new BadRequestException(validationResult);

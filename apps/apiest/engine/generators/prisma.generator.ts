@@ -313,6 +313,8 @@ export class PrismaGenerator {
       ? `@default(${field.defaultValue})`
       : '';
 
+    const unique = field.unique ? ' @unique' : '';
+
     if (field.ref) {
       const pascalCase =
         this.schema.resources[field.ref.resource].naming.pascalCase;
@@ -356,7 +358,7 @@ export class PrismaGenerator {
       type = this.mappings[type];
     }
 
-    return `${field.name} ${type}${nullable}${iterable} ${primaryKey} ${defaultValue}`
+    return `${field.name} ${type}${nullable}${iterable} ${primaryKey} ${unique} ${defaultValue}`
       .replace(/\s+/g, ' ')
       .trim();
   }

@@ -224,7 +224,7 @@ export function getIdentificationFilter(
 
   permissions.map((permission) =>
     permission.specials.map((special) => {
-      if (special.startsWith('$identifiable')) {
+      if (special.startsWith('$id')) {
         allowedAttributes.push(special.split('(')[1].replace(')', ''));
       }
     }),
@@ -325,4 +325,8 @@ export function cleanData(
 
 export function camelCaseToKebabCase(value: string) {
   return value.replace(/([A-Z])/g, '-$1').toLowerCase();
+}
+
+export function isObject(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
 }

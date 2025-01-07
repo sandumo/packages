@@ -8,10 +8,10 @@ import { StorageModule } from '@sandumo/nestjs-storage-module';
   imports: [
     StorageModule.forRootAsync({
       useFactory: () => ({
-        s3AccessKeyId: process.env.S3_ACCESS_KEY_ID,
-        s3SecretAccessKey: process.env.S3_SECRET_ACCESS_KEY,
-        s3Endpoint: process.env.S3_ENDPOINT,
-        s3Bucket: process.env.S3_BUCKET,
+        accessKeyId: process.env.S3_ACCESS_KEY_ID,
+        secretAccessKey: process.env.S3_SECRET_ACCESS_KEY,
+        endpoint: process.env.S3_ENDPOINT,
+        bucket: process.env.S3_BUCKET,
         rootPath: 'apiest/',
       }),
     }),

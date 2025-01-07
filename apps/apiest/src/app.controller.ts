@@ -17,34 +17,60 @@ import { schema, router } from './schema';
 import { getIdentificationFilter } from 'engine/utils';
 import { User } from 'engine/types';
 import { filterPermissions, parsePermission } from 'engine/rules';
-import { PermissionParser } from 'engine/permissions';
+// import { PermissionParser } from 'engine/permissions';
+
+const permissions = [
+  // 'read.post.*.status(sent_to_moderation)',
+
+  // 'read.post.status.[$identifiable(hash),$identifiable(id)]',
+  // 'read.product.*.active(true)',
+  // 'write.post.[status].$identifiable(id)',
+  // 'write.post.status.status(sent_to_moderation)',
+  // '*.post.![status,moderated].status(sent_to_moderation)',
+  // 'owner.read.post',
+  // '*.read.post.*.$identifiable(hash)',
+  // 'read.language.!direction.locale(en)',
+
+  // TODO: explore this
+  // IDEA: read.post.[author.displayName] -> this will give access to user.displayName but only when included in the post.
+  // read.post.[author.*]
+  // read.post.[author.role.*]
+
+  // 'read.post.!content',
+
+  // 'read.comment',
+  // 'read.user.[displayName]',
+
+  // owner
+  // 'read.post.[*,author.[*,role],comments]',
+  // 'write.post.*',
+
+  // moderator
+  // 'read.post.[id,title,content,author.[id,displayName],comments.[id,content]]:status(published)',
+  'list.post.[id,title,content,status,author.[id,email]]:status(published)',
+  'list.post.[id,title,content,status]:status(published)',
+  'list.post.[id,status]:status(draft)',
+  // 'read.product',
+  // 'list.product',
+  'read.post.[*,author.[id,displayName]]',
+  'read.post.[author.[id,displayName],comments.[id,content]]',
+
+  'update.post.[id,title,author.[id,displayName]]',
+  // 'update.post.[]',
+
+  // anyone
+  // 'list.post.[id,title,content,author.[id,displayName],comments.[id,content]]:status(published)',
+
+  // 'read.post.[title,content,author.[displayName,role.[name]],comments.content,owner.[id,email]]',
+];
 
 const user: User = {
   id: 1,
   email: 'test@test.com',
   phone: '1234567890',
   password: 'password',
-  permissions: [
-    // 'read.post.*.status(sent_to_moderation)',
-
-    // 'read.post.status.[$identifiable(hash),$identifiable(id)]',
-    // 'read.product.*.active(true)',
-    // 'write.post.[status].$identifiable(id)',
-    // 'write.post.status.status(sent_to_moderation)',
-    // '*.post.![status,moderated].status(sent_to_moderation)',
-    // 'owner.read.post',
-    // '*.read.post.*.$identifiable(hash)',
-    'read.language.!direction.locale(en)',
-
-    // TODO: explore this
-    // IDEA: read.post.[author.displayName] -> this will give access to user.displayName but only when included in the post.
-    // read.post.[author.*]
-    // read.post.[author.role.*]
-
-    'read.post.!content',
-    'read.comment',
-    'read.user.[displayName]',
-  ].map(parsePermission),
+  _permissions: permissions,
+  permissions: permissions.map(parsePermission),
 };
 
 @Controller()
@@ -61,41 +87,7 @@ export class AppController {
       throw new NotFoundException();
     }
 
-    // const permission = parsePermission2('read.post.[author.displayName]');
-
-    // console.log(
-    //   '[x] permission=',
-    //   (parser.parse()?.resource[0] as any).children,
-    // );
-
-    // console.log('[x] query=', query);
-    // return {};
-
     const resource = schema.resources[router[resourceKey]];
-
-    const permissions = [
-      // 'read.post.[title,content,author.[displayName]]',
-      // 'read.post.[title,content,author.[id]]',
-      // 'read.post.[comments]',
-      // 'read.role',
-      // 'read.comment',
-
-      'read.post.[author.[id,displayName,role],comments]',
-      // 'read.post.[author.[displayName]]',
-      // 'read.post.[author.[role]]',
-      // 'read.post.[author.[id,email]]',
-      // 'read.post.[comments]',
-      // 'create.post',
-      // 'read.role.[name]',
-    ];
-
-    const include = ['author.role', 'comments'];
-
-    const parser = new PermissionParser(schema, permissions);
-
-    console.log('[x] permission=', parser.tree('read', resource, include));
-
-    return {};
 
     // reject if more than 2 parts
     if (parts.length > 2) {
@@ -104,20 +96,21 @@ export class AppController {
 
     // handle findOne
     if (parts.length > 1) {
-      const identificationFilter = getIdentificationFilter(
-        resource,
-        parts[1],
-        filterPermissions(user.permissions, 'read', resource),
-      );
+      // const identificationFilter = getIdentificationFilter(
+      //   resource,
+      //   parts[1],
+      //   filterPermissions(user.permissions, 'read', resource),
+      // );
 
-      if (!identificationFilter) {
-        throw new BadRequestException();
-      }
+      // if (!identificationFilter) {
+      //   throw new BadRequestException();
+      // }
 
       const result = await this.appService.getOne(
         user,
         resource,
-        identificationFilter,
+        { id: parseInt(parts[1]) } as any,
+        query,
       );
 
       if (!result) {
@@ -127,7 +120,7 @@ export class AppController {
       return result;
     }
 
-    return await this.appService.getManyTest(user, resource, query);
+    return await this.appService.getMany(user, resource, query);
   }
 
   @Post('**')
@@ -197,19 +190,19 @@ export class AppController {
     const resource = schema.resources[router[resourceKey]];
 
     // handle findOne
-    const identificationFilter = getIdentificationFilter(
-      resource,
-      parts[1],
-      filterPermissions(user.permissions, 'write', resource),
-    );
+    // const identificationFilter = getIdentificationFilter(
+    //   resource,
+    //   parts[1],
+    //   filterPermissions(user.permissions, 'write', resource),
+    // );
 
     // console.log('[x] identificationFilter=', identificationFilter);
 
     // return {};
 
-    if (!identificationFilter) {
-      throw new BadRequestException();
-    }
+    // if (!identificationFilter) {
+    //   throw new BadRequestException();
+    // }
 
     // return {};
 
@@ -231,7 +224,7 @@ export class AppController {
     const result = await this.appService.update(
       user,
       resource,
-      identificationFilter,
+      { id: parseInt(parts[1]) } as any,
       {
         ...req.body,
         ...fss,
