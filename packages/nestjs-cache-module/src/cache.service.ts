@@ -50,15 +50,22 @@ export class CacheService implements OnModuleInit, OnModuleDestroy {
    * @param key - The cache key.
    * @param callback - Optional async function to compute the value if not found.
    * @param ttl - Time-to-live in seconds for the cached value if the callback is used.
+   * @param ignore - Whether to ignore the cached value if the callback is used.
    * @returns The cached value or the result of the callback.
    */
   async get<T>(
     key: string,
     callback?: () => Promise<T>,
     ttl?: number,
+    ignore?: boolean,
   ): Promise<T | null> {
     const redisKey = this.getKey(key);
-    const cachedValue = await this.client.get(redisKey);
+    let cachedValue = null;
+
+    if (!ignore) {
+      cachedValue = await this.client.get(redisKey);
+    }
+
     if (cachedValue) {
       return JSON.parse(cachedValue) as T;
     } else if (callback && ttl !== undefined) {
@@ -82,5 +89,9 @@ export class CacheService implements OnModuleInit, OnModuleDestroy {
 
   async flushAll(): Promise<void> {
     await this.client.flushall();
+  }
+
+  async command(command: string, ...args: string[]): Promise<any> {
+    return await this.client.call(command, ...args);
   }
 }
