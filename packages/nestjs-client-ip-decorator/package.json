@@ -1,0 +1,42 @@
+{
+  "name": "@sandumo/nestjs-client-ip-decorator",
+  "version": "0.0.2",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "lint": "eslint ./src/**/*.{ts,tsx}"
+  },
+  "devDependencies": {
+    "eslint": "^7.32.0",
+    "eslint-config-custom": "workspace:*",
+    "tsconfig": "workspace:*",
+    "typescript": "^4.5.2"
+  },
+  "dependencies": {
+    "@nestjs/common": "^9.0.0",
+    "aws-sdk": "^2.1309.0",
+    "ioredis": "^5.4.1"
+  },
+  "description": "This package provides a NestJS decorator for getting the client IP address.",
+  "keywords": [
+    "client",
+    "ip",
+    "decorator",
+    "nestjs"
+  ],
+  "homepage": "https://github.com/sandumo/packages/blob/main/packages/nestjs-client-ip-decorator/README.md",
+  "author": {
+    "name": "Sandu Morari",
+    "email": "sandu.m.md@gmail.com",
+    "url": "https://github.com/sandumorari"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/sandumo/packages.git"
+  }
+}

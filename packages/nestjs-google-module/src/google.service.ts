@@ -14,6 +14,7 @@ export class GoogleService implements OnModuleInit {
   }
 
   async onModuleInit() {
+    console.log('[x] on module init');
     const auth = new google.auth.GoogleAuth({
       scopes: ['https://www.googleapis.com/auth/drive'],
     });
@@ -26,6 +27,7 @@ export class GoogleService implements OnModuleInit {
   }
 
   get drive() {
+    console.log('[x] got here epta');
     return google.drive({ version: 'v3', auth: this.client });
   }
 }

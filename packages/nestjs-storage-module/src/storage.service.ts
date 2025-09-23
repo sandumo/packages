@@ -102,15 +102,15 @@ export class StorageService {
     await this.s3Client.send(
       new CopyObjectCommand({
         Bucket: this.BUCKET,
-        CopySource: `${this.BUCKET}/${this.ROOT_PATH}${oldPath}`,
-        Key: `${this.ROOT_PATH}${newPath}`,
+        CopySource: `${this.BUCKET}/${this.path(oldPath)}`,
+        Key: this.path(newPath),
       })
     );
 
     await this.s3Client.send(
       new DeleteObjectCommand({
         Bucket: this.BUCKET,
-        Key: `${this.ROOT_PATH}${oldPath}`,
+        Key: this.path(oldPath),
       })
     );
   }
@@ -139,15 +139,29 @@ export class StorageService {
   }
 
   async uploadFile(file: Express.Multer.File, filepath?: string): Promise<any> {
+    if (file.mimetype === 'application/file-reference') {
+      return JSON.parse(file.buffer.toString());
+    }
+
     filepath = filepath
-      ? `${this.ROOT_PATH}${filepath}`
-      : `${this.ROOT_PATH}${this.UNNAMED_ROOT_PATH}${this.getRandomKey()}.${file.originalname.split('.').pop()}`;
+      ? (filepath.startsWith(this.ROOT_PATH) ? filepath : `${this.ROOT_PATH}${filepath}`)
+      : `${this.UNNAMED_ROOT_PATH}${this.getRandomKey()}.${file.originalname.split('.').pop()}`;
+
     await this.putObject(filepath, file.buffer);
+
     return {
       name: file.originalname,
       path: filepath,
       type: file.mimetype,
       size: file.size,
     };
+  }
+
+  path(filepath: string) {
+    if (filepath.startsWith(this.ROOT_PATH)) {
+      return filepath;
+    }
+
+    return `${this.ROOT_PATH}${filepath}`;
   }
 }
