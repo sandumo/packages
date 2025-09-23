@@ -1,12 +1,14 @@
 import dayjs from 'dayjs';
+import CustomParseFormat from 'dayjs/plugin/customParseFormat';
 
 type DatetimeInput = string | number | Date | dayjs.Dayjs | null | undefined;
 
 export class Datetime {
   private datetime: dayjs.Dayjs;
 
-  constructor(datetime: DatetimeInput) {
-    this.datetime = dayjs(datetime);
+  constructor(datetime: DatetimeInput, format?: string) {
+    dayjs.extend(CustomParseFormat);
+    this.datetime = dayjs(datetime, format);
   }
 
   toDateFormat(): string {
@@ -108,8 +110,24 @@ export class Datetime {
 
     return [value, unit];
   }
+
+  /**
+   * Check if the datetime is in the future
+   * @returns boolean
+   */
+  inFuture(): boolean {
+    return this.datetime.isAfter(dayjs());
+  }
+
+  /**
+   * Check if the datetime is in the past
+   * @returns boolean
+   */
+  inPast(): boolean {
+    return this.datetime.isBefore(dayjs());
+  }
 }
 
-export default function datetime(datetime?: DatetimeInput): Datetime {
-  return new Datetime(datetime);
+export default function datetime(datetime?: DatetimeInput, format?: string): Datetime {
+  return new Datetime(datetime, format);
 }
