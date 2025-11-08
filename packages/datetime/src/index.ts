@@ -19,16 +19,40 @@ export class Datetime {
     return this.datetime.format('YYYY-MM-DD HH:mm:ss');
   }
 
-  isBetween(start: DatetimeInput, end: DatetimeInput): boolean {
-    if (this.datetime.isBefore(start)) {
+  isBetween(start: DatetimeInput | Datetime, end: DatetimeInput | Datetime, unit: dayjs.OpUnitType = 'day'): boolean {
+    if (start instanceof Datetime) {
+      start = start.datetime;
+    }
+
+    if (end instanceof Datetime) {
+      end = end.datetime;
+    }
+
+    if (this.datetime.isBefore(start, unit)) {
       return false;
     }
 
-    if (this.datetime.isAfter(end)) {
+    if (this.datetime.isAfter(end, unit)) {
       return false;
     }
 
     return true;
+  }
+
+  inPeriod(start: DatetimeInput, end: DatetimeInput, unit: dayjs.UnitType = 'day'): boolean {
+    if (this.isBetween(start, end)) {
+      return true;
+    }
+
+    if (this.datetime.isSame(start, unit)) {
+      return true;
+    }
+
+    if (this.datetime.isSame(end, unit)) {
+      return true;
+    }
+
+    return false;
   }
 
   diff(datetime: DatetimeInput | Datetime, unit: dayjs.UnitType = 'day'): number {
@@ -55,6 +79,10 @@ export class Datetime {
     return new Datetime(this.datetime.startOf(unit));
   }
 
+  endOf(unit: dayjs.OpUnitType): Datetime {
+    return new Datetime(this.datetime.endOf(unit));
+  }
+
   startOfWeek(): Datetime {
     let datetime = this.datetime;
 
@@ -63,6 +91,53 @@ export class Datetime {
     }
 
     return new Datetime(datetime);
+  }
+
+  endOfWeek(): Datetime {
+    let datetime = this.datetime;
+
+    while (datetime.format('ddd') !== 'Sun') {
+      datetime = datetime.add(1, 'day');
+    }
+
+    return new Datetime(datetime);
+  }
+
+  isSame(datetime: DatetimeInput | Datetime, unit: dayjs.OpUnitType = 'day'): boolean {
+    if (datetime instanceof Datetime) {
+      datetime = datetime.datetime;
+    }
+
+    return this.datetime.isSame(datetime, unit);
+  }
+
+  isBefore(datetime: DatetimeInput | Datetime, unit: dayjs.OpUnitType = 'day'): boolean {
+    if (datetime instanceof Datetime) {
+      datetime = datetime.datetime;
+    }
+
+    return this.datetime.isBefore(datetime, unit);
+  }
+
+  isAfter(datetime: DatetimeInput | Datetime, unit: dayjs.OpUnitType = 'day'): boolean {
+    if (datetime instanceof Datetime) {
+      datetime = datetime.datetime;
+    }
+
+    return this.datetime.isAfter(datetime, unit);
+  }
+
+  range(start: DatetimeInput | Datetime, end: DatetimeInput | Datetime, unit: dayjs.ManipulateType = 'day'): Datetime[] {
+    let startDatetime = start instanceof Datetime ? start.datetime : dayjs(start);
+    let endDatetime = end instanceof Datetime ? end.datetime : dayjs(end);
+    let range: Datetime[] = [];
+
+    while (startDatetime.isBefore(endDatetime)) {
+      range.push(new Datetime(startDatetime.toISOString()));
+      startDatetime = startDatetime.add(1, unit);
+    }
+
+    return range;
   }
 
   toString(): string {
@@ -125,6 +200,20 @@ export class Datetime {
    */
   inPast(): boolean {
     return this.datetime.isBefore(dayjs());
+  }
+
+  /**
+   * Check if the datetime is a leap year
+   * @returns boolean
+   */
+  isLeapYear(): boolean {
+    const year = this.datetime.get('year');
+
+    if ((year % 4 === 0 && year % 100 !== 0) || (year % 400 === 0)) {
+      return true;
+    }
+
+    return false;
   }
 }
 
