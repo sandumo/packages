@@ -106,6 +106,7 @@ export class PrismaAdapter {
 
           return acc;
         }, {}),
+        [resource.primaryKey]: true, // TODO: think of a better way to handle this
         ...translations,
       },
     };
@@ -145,6 +146,7 @@ export class PrismaAdapter {
 
   postProcessRecursive(resource: Resource, data: any) {
     return Object.values(resource.fields).reduce((acc, field) => {
+      // handle translatable fields
       if (field.translatable) {
         const translation = data.translations.find(
           (t) => t.languageId === this.language.id,
@@ -178,6 +180,7 @@ export class PrismaAdapter {
         return acc;
       }
 
+      // handle references
       if (field.ref) {
         if (Array.isArray(data[field.name])) {
           return {

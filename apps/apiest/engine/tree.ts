@@ -1,6 +1,15 @@
 import { NestedObject } from './permissions';
+import { Resource, Field } from './types';
+import { asyncMapParallel } from './utils';
 
+/**
+ * A tree is a nested object that used to represent data structure.
+ *
+ * It can be used to filter, intersect and map data.
+ */
 export class Tree {
+  [x: string]: boolean | Tree;
+
   static merge(a: NestedObject, b: NestedObject): NestedObject {
     const result: NestedObject = { ...a };
     for (const key in b) {
@@ -40,7 +49,10 @@ export class Tree {
   static filter(data: any, tree: NestedObject) {
     return Object.keys(tree).reduce((acc, key) => {
       if (tree[key] === true) {
-        acc[key] = data[key];
+        // checks if field exists in the tree but does not exist in data.
+        if (data[key] !== undefined) {
+          acc[key] = data[key];
+        }
       } else if (typeof tree[key] === 'object') {
         if (Array.isArray(data[key])) {
           acc[key] = data[key].map((item) =>
@@ -70,5 +82,47 @@ export class Tree {
 
       return acc;
     }, {});
+  }
+
+  static map(data: any, callback: (key: string, value: any) => any) {
+    return Object.keys(data).reduce((acc, key) => {
+      acc[key] = callback(key, data[key]);
+      return acc;
+    }, {});
+  }
+
+  // NOT USED FROM HERE
+  static async traverse(
+    data: any,
+    resource: Resource,
+    callback: (
+      key: string,
+      value: any,
+      field: Field,
+      resource: Resource,
+    ) => Promise<any> | any,
+    recursive: boolean = false,
+  ): Promise<any> {
+    return Object.fromEntries(
+      (
+        await asyncMapParallel(Object.entries(data), async ([key, value]) => {
+          if (resource.fields[key]) {
+            if (recursive && resource.fields[key].ref) {
+              return [
+                key,
+                await this.traverse(value, resource, callback, recursive),
+              ];
+            }
+
+            return [
+              key,
+              await callback(key, value, resource.fields[key], resource),
+            ];
+          }
+
+          return [key, undefined];
+        })
+      ).filter(([, value]) => value !== undefined),
+    );
   }
 }

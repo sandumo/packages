@@ -3,6 +3,7 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { PrismaService } from './prisma.service';
 import { StorageModule } from '@sandumo/nestjs-storage-module';
+import { CacheModule } from '@sandumo/nestjs-cache-module';
 
 @Module({
   imports: [
@@ -13,6 +14,13 @@ import { StorageModule } from '@sandumo/nestjs-storage-module';
         endpoint: process.env.S3_ENDPOINT,
         bucket: process.env.S3_BUCKET,
         rootPath: 'apiest/',
+      }),
+    }),
+    CacheModule.forRootAsync({
+      // imports: [ConfigModule],
+      // inject: [ConfigService],
+      useFactory: () => ({
+        redisUrl: process.env.REDIS_URL,
       }),
     }),
   ],

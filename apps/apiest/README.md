@@ -122,3 +122,5 @@ read permissions must be the most optimal
 
 
 resource, include
+
+[base-resource]/[id]/[relation-resource]

@@ -82,7 +82,7 @@ export class PermissionParser {
     } else if (data) {
       includeTree = this.getIncludeTreeFromData(data);
 
-      console.log('[x] includeTree=', includeTree);
+      // console.log('[x] includeTree=', includeTree);
     }
 
     // build requested tree

@@ -1,5 +1,13 @@
 import { getAllowedAttributes } from './rules';
-import { FieldType, Field, Resource, QueryFilter, Permission } from './types';
+import { schema } from './schema';
+import {
+  FieldType,
+  Field,
+  Resource,
+  QueryFilter,
+  Permission,
+  Schema,
+} from './types';
 import { z } from 'zod';
 
 // export function cast(value: any, type: 'integer'): number;
@@ -123,13 +131,13 @@ export function castData(model: Resource, data: any) {
   return result;
 }
 
-function castValue(value: any, type: FieldType) {
+export function castValue(value: any, type: FieldType) {
   if (type === 'integer') {
     return parseInt(value);
   } else if (type === 'float') {
     return parseFloat(value);
   } else if (type === 'boolean') {
-    return value === 'true';
+    return typeof value === 'boolean' ? value : value === 'true';
   }
 
   return value;
@@ -169,7 +177,7 @@ export function validateData(
   return schema.safeParse(data);
 }
 
-function validateValue(field: Field, type: FieldType): z.ZodTypeAny {
+export function validateValue(field: Field, type: FieldType): z.ZodTypeAny {
   let zod: z.ZodTypeAny;
 
   if (type === 'integer') {
@@ -199,14 +207,21 @@ function validateValue(field: Field, type: FieldType): z.ZodTypeAny {
 export function traverse(
   data: any,
   model: Resource,
-  callback: (key: string, value: any, field: Field, model: Resource) => void,
+  callback: (
+    key: string,
+    value: any,
+    field: Field,
+    model: Resource,
+    schema: Schema,
+  ) => void,
 ) {
   return Object.fromEntries(
     Object.entries(data)
-      .map(([key, value]) => [
-        key,
-        callback(key, value, model.fields[key], model),
-      ])
+      .map(([key, value]) =>
+        model.fields[key]
+          ? [key, callback(key, value, model.fields[key], model, schema)]
+          : [key, undefined],
+      )
       .filter(([, value]) => value !== undefined),
   );
 }
@@ -329,4 +344,55 @@ export function camelCaseToKebabCase(value: string) {
 
 export function isObject(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+// NOT USED YET
+export async function asyncReduce<T, U>(
+  array: T[],
+  reducer: (
+    accumulator: U,
+    currentValue: T,
+    index: number,
+    array: T[],
+  ) => Promise<U>,
+  initialValue: U,
+): Promise<U> {
+  let accumulator = initialValue;
+
+  for (let i = 0; i < array.length; i++) {
+    accumulator = await reducer(accumulator, array[i], i, array); // Await each step
+  }
+
+  return accumulator;
+}
+
+// NOT USED YET
+export async function asyncReduceParallel<T, U>(
+  array: T[],
+  reducer: (
+    accumulator: U,
+    currentValue: T,
+    index: number,
+    array: T[],
+  ) => Promise<U>,
+  initialValue: U,
+  combiner: (accumulator: U, currentResult: U) => U,
+): Promise<U> {
+  // Run all async operations in parallel
+  const results = await Promise.all(
+    array.map(async (currentValue, index) => {
+      return reducer(initialValue, currentValue, index, array);
+    }),
+  );
+
+  // Combine the results using the provided combiner function
+  return results.reduce(combiner, initialValue);
+}
+
+export async function asyncMapParallel<T, U>(
+  array: T[],
+  mapper: (item: T, index: number, array: T[]) => Promise<U>,
+): Promise<U[]> {
+  // Run all async operations in parallel
+  return Promise.all(array.map(mapper));
 }

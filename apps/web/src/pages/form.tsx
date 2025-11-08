@@ -5,7 +5,7 @@ export default function Page() {
   const handleSubmit = async (data: any) => {
     console.log('[x] data', data);
 
-    const response = await api.axios.post('/products', toFormData({ ...data, highlights: ['1', '2'] }), { headers: { 'Content-Type': 'multipart/form-data' } }).then(res => res.data);
+    // const response = await api.axios.post('/products', toFormData({ ...data, highlights: ['1', '2'] }), { headers: { 'Content-Type': 'multipart/form-data' } }).then(res => res.data);
 
     const response = await api.axios.get('/languages', { params: {
       filter: {
@@ -33,7 +33,7 @@ export default function Page() {
     console.log('[x] response', response);
   };
 
-  const makeRequest = async () => {
+  const update = async () => {
     // const response = await api.axios.get('/languages', { params: {
     //   filter: {
     //     locale: 'en',
@@ -45,23 +45,78 @@ export default function Page() {
     // } }).then(res => res.data);
 
     const data = {
-      status: 'published',
+      post: {
+        id: 1,
+        status: 'active',
+        moderated: true,
+
+        translations: {
+          en: {
+            title: 'New Post Title EN',
+          },
+          ru: {
+            title: 'New Post Title RU',
+          },
+        },
+      },
       translations: {
         en: {
-          title: 'New Post Title EN',
-          content: 'New Post Content EN',
+          // title: 'New Post Title EN',
+          content: 'New Comment Content EN',
         },
         ru: {
-          title: 'New Post Title RU',
-          content: 'New Post Content RU',
+          // title: 'New Post Title RU',
+          content: 'New Comment Content RU',
         },
       },
     };
 
-    const response = await api.axios.patch('/posts/1', data).then(res => res.data);
+    // const response = await api.axios.patch('/comments/1', data).then(res => res.data);
+    const file = new File(['test'], 'test.txt', { type: 'text/plain' });
+
+    const response = await api.axios.patch('/comments/1', objectToFormData({ ...data, picture: file }), { headers: { 'Content-Type': 'multipart/form-data' } }).then(res => res.data);
 
     console.log('[x] response', response);
   };
+
+  const create = async () => {
+    const file = new File(['test'], 'test.txt', { type: 'text/plain' });
+
+    const data = {
+      picture: file,
+      post: {
+        status: 'active',
+        moderated: true,
+        pictures: [file, file],
+        translations: {
+          en: {
+            title: 'New Post Title EN',
+          },
+          ru: {
+            title: 'New Post Title RU',
+          },
+        },
+      },
+      translations: {
+        en: {
+          // title: 'New Post Title EN',
+          content: 'New Comment Content EN',
+        },
+        ru: {
+          // title: 'New Post Title RU',
+          content: 'New Comment Content RU',
+        },
+      },
+    };
+
+    // const response = await api.axios.patch('/comments/1', data).then(res => res.data);
+
+    const response = await api.axios.post('/comments', objectToFormData({ ...data }), { headers: { 'Content-Type': 'multipart/form-data' } }).then(res => res.data);
+
+    console.log('[x] response', response);
+  };
+
+  // console.log('[x] flatObject', objectToFormData({ a: { b: { c: 'd' }, e: ['f', 'g'] } }));
 
   return (
     <div className="flex flex-col gap-4 p-6 items-center justify-center min-h-screen">
@@ -89,7 +144,8 @@ export default function Page() {
 
       </Form> */}
 
-      <Button onClick={makeRequest} color="primary">Request</Button>
+      <Button onClick={create} color="primary">Create</Button>
+      <Button onClick={update} color="primary">Update</Button>
       {/* <br />
       <Button onClick={() => api.axios.post('/posts', { title: 'My Post', content: 'My Content' })} sx={{ mt: 4 }}>Create Post</Button> */}
     </div>
@@ -120,6 +176,45 @@ export function toFormData(data: Record<string, any>) {
       formData.append(key, value);
     }
   }
+
+  return formData;
+}
+
+function flatObject(obj: Record<string, any>, prefix: string = '') {
+  let result: Record<string, any> = {};
+
+  for (const key in obj) {
+    if (typeof obj[key] === 'object' && obj[key] !== null) {
+      result = { ...result, ...flatObject(obj[key], `${prefix}${key}.`) };
+    } else if (Array.isArray(obj[key])) {
+      result[`${prefix}${key}`] = obj[key].map(item => typeof item === 'object' ? JSON.stringify(item) : item);
+    } else {
+      result[`${prefix}${key}`] = obj[key];
+    }
+  }
+
+  return result;
+}
+
+function appendFormData(formData: FormData, data: any, parentKey: string = ''): void {
+  if (data && typeof data === 'object' && !(data instanceof File)) {
+    Object.keys(data).forEach(key => {
+      const newKey = parentKey ? `${parentKey}[${key}]` : key;
+      appendFormData(formData, data[key], newKey);
+    });
+  } else if (Array.isArray(data)) {
+    data.forEach((item, index) => {
+      const newKey = `${parentKey}[${index}]`;
+      appendFormData(formData, item, newKey);
+    });
+  } else {
+    formData.append(parentKey, data);
+  }
+}
+
+function objectToFormData(obj: any): FormData {
+  const formData = new FormData();
+  appendFormData(formData, obj);
 
   return formData;
 }

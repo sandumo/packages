@@ -62,6 +62,7 @@ export const inputSchema: InputSchema = {
         hash: 'string identifiable nullable',
         author: 'ref(user.id) nullable',
         // hideStatus: 'boolean default(false)',
+        pictures: 'file iterable',
       },
       conditions: {
         sentToModeration: {
@@ -91,6 +92,7 @@ export const inputSchema: InputSchema = {
         id: 'integer PK',
         content: 'string translatable',
         post: 'ref(post.id)',
+        picture: 'file nullable',
       },
     },
 
@@ -249,6 +251,13 @@ function transform(schema: InputSchema): Schema {
           primaryKey: Object.entries(model.fields).find(([, value]) =>
             value.includes('PK'),
           )?.[0],
+
+          // multiple identifiable fields
+          hasMultipleIdentifiableFields:
+            Object.entries(model.fields).filter(
+              ([, value]) =>
+                value.includes('PK') || value.includes('identifiable'),
+            ).length > 1,
 
           // ownable
           ownable: model.flags?.includes('ownable') || false,

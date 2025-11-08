@@ -14,9 +14,11 @@ import {
 import { AppService } from './app.service';
 import { AnyFilesInterceptor } from '@nestjs/platform-express';
 import { schema, router } from './schema';
-import { getIdentificationFilter } from 'engine/utils';
+// import { getIdentificationFilter } from 'engine/utils';
 import { User } from 'engine/types';
-import { filterPermissions, parsePermission } from 'engine/rules';
+import { parsePermission } from 'engine/rules';
+import * as _ from 'lodash';
+import { Tree } from 'engine/tree';
 // import { PermissionParser } from 'engine/permissions';
 
 const permissions = [
@@ -54,9 +56,13 @@ const permissions = [
   // 'list.product',
   'read.post.[*,author.[id,displayName]]',
   'read.post.[author.[id,displayName],comments.[id,content]]',
+  'read.comment',
 
   'update.post.[id,title,author.[id,displayName]]',
   // 'update.post.[]',
+
+  'create.comment.[*,post.[title,status,moderated,pictures]]',
+  'update.comment.[*,post.[title,status,moderated]]',
 
   // anyone
   // 'list.post.[id,title,content,author.[id,displayName],comments.[id,content]]:status(published)',
@@ -155,10 +161,13 @@ export class AppController {
       fss[file.fieldname].push(file);
     });
 
-    return await this.appService.handleCreate(resource, {
-      ...req.body,
-      ...fss,
-    });
+    const processedFiles = processFiles(files);
+
+    return await this.appService.create(
+      user,
+      resource,
+      Tree.merge(req.body as any, processedFiles),
+    );
   }
 
   @Patch('**')
@@ -216,19 +225,23 @@ export class AppController {
       fss[file.fieldname].push(file);
     });
 
+    const processedFiles = processFiles(files);
+
+    // console.log('[x] processedFiles=', processedFiles.test.picture);
+
     // return await this.appService.handleCreate(resource, {
     //   ...req.body,
     //   ...fss,
     // });
 
+    // console.log('[x] fss=', fss);
+
     const result = await this.appService.update(
       user,
       resource,
       { id: parseInt(parts[1]) } as any,
-      {
-        ...req.body,
-        ...fss,
-      },
+      Tree.merge(req.body as any, processedFiles),
+      parseInt(parts[1]),
     );
 
     if (!result) {
@@ -237,4 +250,21 @@ export class AppController {
 
     return result;
   }
+}
+
+function processFiles(files: Array<Express.Multer.File>) {
+  const obj: Record<string, any> = {};
+
+  files?.forEach((file) => {
+    _.set(
+      obj,
+      file.fieldname
+        .replace(/(\[|\]\[|\])/g, ' ')
+        .trim()
+        .split(' '),
+      file,
+    );
+  });
+
+  return obj;
 }

@@ -70,6 +70,7 @@ export type Resource = {
   primaryKey: string;
   ownable: boolean;
   translatable: boolean;
+  hasMultipleIdentifiableFields: boolean;
 };
 
 export type Schema = {
