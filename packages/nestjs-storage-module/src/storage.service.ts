@@ -164,4 +164,21 @@ export class StorageService {
 
     return `${this.ROOT_PATH}${filepath}`;
   }
+
+  getPublicUrl(filepath: string) {
+    if (this.options.getPublicUrl) {
+      return this.options.getPublicUrl(filepath);
+    }
+
+    return `${this.options.endpoint}/${this.path(filepath)}`;
+  }
+
+  async deleteObject(key: string): Promise<any> {
+    if (!this.isUp()) {
+      return null;
+    }
+
+    const command = new DeleteObjectCommand({ Bucket: this.BUCKET, Key: key });
+    return await this.s3Client.send(command);
+  }
 }

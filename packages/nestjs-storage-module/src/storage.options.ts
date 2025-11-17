@@ -28,6 +28,11 @@ export interface StorageModuleOptions {
    * @default '/unnamed'
    */
   unnamedRootPath?: string;
+
+  /**
+   * @default null
+   */
+  getPublicUrl?: (path: string) => string;
 }
 
 export const STORAGE_MODULE_OPTIONS = Symbol('STORAGE_MODULE_OPTIONS');
