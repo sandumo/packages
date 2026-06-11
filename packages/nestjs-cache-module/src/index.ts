@@ -1,4 +1,4 @@
 import { CacheModule } from './cache.module';
-import { CacheService } from './cache.service';
+import { CacheService, ProcessStatus, ProcessStatusResult } from './cache.service';
 
-export { CacheModule, CacheService };
+export { CacheModule, CacheService, ProcessStatus, ProcessStatusResult };
